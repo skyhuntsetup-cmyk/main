@@ -10,6 +10,7 @@ import { AlertsScreen } from './screens/AlertsScreen';
 import { DealsScreen } from './screens/DealsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { BottomNav } from './components/BottomNav';
+import { AuthCallbackScreen } from './screens/AuthCallbackScreen';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 
@@ -98,6 +99,7 @@ function AppContent() {
           <Route path="/alerts" element={<AlertsScreen />} />
           <Route path="/deals" element={<DealsScreen />} />
           <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/auth/callback" element={<AuthCallbackScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
