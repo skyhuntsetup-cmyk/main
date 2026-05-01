@@ -5,6 +5,7 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ProfileSetupScreen } from './screens/ProfileSetupScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { SearchScreen } from './screens/SearchScreen';
+import { SearchLoadingScreen } from './screens/SearchLoadingScreen';
 import { ResultsScreen } from './screens/ResultsScreen';
 import { AlertsScreen } from './screens/AlertsScreen';
 import { DealsScreen } from './screens/DealsScreen';
@@ -32,7 +33,7 @@ function AppContent() {
   useEffect(() => { loginRef.current = login; }, [login]);
   useEffect(() => { logoutRef.current = logout; }, [logout]);
 
-  const isInApp = APP_TABS.includes(path as Tab) || path === 'results';
+  const isInApp = APP_TABS.includes(path as Tab) || path === 'results' || path === 'loading';
   const activeTab = (APP_TABS.includes(path as Tab) ? path : 'search') as Tab;
 
   // Set up auth listener exactly ONCE on mount.
@@ -96,7 +97,8 @@ function AppContent() {
           <Route path="/login" element={<LoginScreen onLoginSuccess={() => navigate('/profile-setup')} />} />
           <Route path="/profile-setup" element={<ProfileSetupScreen onComplete={() => navigate('/home')} />} />
           <Route path="/home" element={<HomeScreen onNavigate={(s) => navigate(`/${s}`)} />} />
-          <Route path="/search" element={<SearchScreen onSearch={() => navigate('/results')} />} />
+          <Route path="/search" element={<SearchScreen onSearch={(params) => navigate('/loading', { state: params })} />} />
+          <Route path="/loading" element={<SearchLoadingScreen />} />
           <Route path="/results" element={<ResultsScreen onBack={() => navigate('/search')} />} />
           <Route path="/alerts" element={<AlertsScreen />} />
           <Route path="/deals" element={<DealsScreen />} />

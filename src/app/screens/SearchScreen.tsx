@@ -1,35 +1,77 @@
 import { useState } from 'react';
-import { MapPin, Calendar, Users, Plane, ArrowRight, ArrowLeftRight } from 'lucide-react';
+import { Calendar, Users, Plane, ArrowRight, ArrowLeftRight } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
+import { AirportSearch } from '../components/AirportSearch';
+import { type Airport, AIRPORTS } from '../../data/airports';
+import { useStore } from '../../store/useStore';
 
 interface SearchScreenProps {
-  onSearch: () => void;
+  onSearch: (params: SearchState) => void;
 }
 
-const cities = ['Delhi (DEL)', 'Mumbai (BOM)', 'Bangalore (BLR)', 'Chennai (MAA)', 'Hyderabad (HYD)', 'Kolkata (CCU)'];
-const destinations = ['London (LHR)', 'Dubai (DXB)', 'Bangkok (BKK)', 'Singapore (SIN)', 'New York (JFK)', 'Tokyo (NRT)', 'Paris (CDG)', 'Sydney (SYD)'];
+export interface SearchState {
+  from: Airport;
+  to: Airport;
+  departDate: string;
+  returnDate: string;
+  passengers: number;
+  cabin: string;
+  tripType: 'one-way' | 'round-trip';
+}
+
 const cabinClasses = [
-  { label: 'Economy', icon: '💺' },
-  { label: 'Premium Economy', icon: '🛋️' },
-  { label: 'Business', icon: '✨' },
-  { label: 'First Class', icon: '👑' },
+  { label: 'Economy', icon: '💺', value: 'economy' },
+  { label: 'Premium Economy', icon: '🛋️', value: 'premium_economy' },
+  { label: 'Business', icon: '✨', value: 'business' },
+  { label: 'First Class', icon: '👑', value: 'first' },
 ];
 
 const popularRoutes = [
-  { from: 'DEL', to: 'LHR', flag: '🇬🇧', price: '₹43K' },
-  { from: 'BOM', to: 'DXB', flag: '🇦🇪', price: '₹8K' },
-  { from: 'BLR', to: 'SIN', flag: '🇸🇬', price: '₹20K' },
+  { from: 'DEL', to: 'LHR', label: 'Delhi → London', flag: '🇬🇧', price: '₹43K' },
+  { from: 'BOM', to: 'DXB', label: 'Mumbai → Dubai', flag: '🇦🇪', price: '₹8K' },
+  { from: 'BLR', to: 'SIN', label: 'Bengaluru → Singapore', flag: '🇸🇬', price: '₹20K' },
+  { from: 'DEL', to: 'JFK', label: 'Delhi → New York', flag: '🇺🇸', price: '₹56K' },
+  { from: 'BOM', to: 'CDG', label: 'Mumbai → Paris', flag: '🇫🇷', price: '₹48K' },
+  { from: 'HYD', to: 'SYD', label: 'Hyderabad → Sydney', flag: '🇦🇺', price: '₹62K' },
 ];
 
+const defaultFrom = AIRPORTS.find(a => a.code === 'DEL')!;
+const defaultTo   = AIRPORTS.find(a => a.code === 'LHR')!;
+
 export function SearchScreen({ onSearch }: SearchScreenProps) {
-  const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('round-trip');
-  const [from, setFrom] = useState('Delhi (DEL)');
-  const [to, setTo] = useState('London (LHR)');
-  const [departDate, setDepartDate] = useState('2026-05-15');
-  const [returnDate, setReturnDate] = useState('2026-05-25');
-  const [passengers, setPassengers] = useState(2);
-  const [cabin, setCabin] = useState('Economy');
+  const { user } = useStore();
+  const [tripType, setTripType]     = useState<'one-way' | 'round-trip'>('round-trip');
+  const [from, setFrom]             = useState<Airport>(
+    AIRPORTS.find(a => a.code === user?.homeAirport?.match(/\((\w+)\)/)?.[1]) || defaultFrom
+  );
+  const [to, setTo]                 = useState<Airport>(defaultTo);
+  const [departDate, setDepartDate] = useState(
+    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+  );
+  const [returnDate, setReturnDate] = useState(
+    new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
+  );
+  const [passengers, setPassengers] = useState(1);
+  const [cabin, setCabin]           = useState('Economy');
+
+  const handleSwap = () => {
+    const tmp = from;
+    setFrom(to);
+    setTo(tmp);
+  };
+
+  const handleSearch = () => {
+    onSearch({ from, to, departDate, returnDate, passengers, cabin, tripType });
+  };
+
+  const handlePopularRoute = (fromCode: string, toCode: string) => {
+    const f = AIRPORTS.find(a => a.code === fromCode);
+    const t = AIRPORTS.find(a => a.code === toCode);
+    if (f) setFrom(f);
+    if (t) setTo(t);
+    setTimeout(handleSearch, 100);
+  };
 
   const inputClass = 'w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-semibold text-sm focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,245,255,0.15)] transition-all appearance-none';
 
@@ -44,7 +86,9 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
               <span className="text-xs font-bold text-[#0047AB] uppercase tracking-widest">Flight Search</span>
             </div>
             <h1 className="text-3xl font-black text-[#001F3F]">Find Flights</h1>
-            <p className="text-sm text-[#001F3F]/50 font-medium mt-1">Compare 50K+ routes in real-time</p>
+            <p className="text-sm text-[#001F3F]/50 font-medium mt-1">
+              150+ countries · 200+ airlines · Best prices
+            </p>
           </div>
         </div>
       </div>
@@ -62,7 +106,7 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
                   : 'bg-white/30 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F]/60'
               }`}
             >
-              {type === 'round-trip' ? 'Round Trip' : 'One Way'}
+              {type === 'round-trip' ? '↔ Round Trip' : '→ One Way'}
             </button>
           ))}
         </div>
@@ -70,31 +114,33 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
         {/* Main search card */}
         <LiquidGlassCard size="large">
           <div className="space-y-4">
-            {/* From / To */}
-            <div className="space-y-3">
-              <div>
-                <label className="flex items-center gap-2 text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-1.5">
-                  <MapPin size={12} className="text-[#00F5FF]" /> From
-                </label>
-                <select value={from} onChange={(e) => setFrom(e.target.value)} className={inputClass}>
-                  {cities.map((c) => <option key={c}>{c}</option>)}
-                </select>
-              </div>
+            {/* From / To with swap */}
+            <div className="space-y-2">
+              <AirportSearch
+                label="From"
+                value={from}
+                onChange={setFrom}
+                placeholder="City or airport code..."
+              />
 
-              <div className="flex items-center justify-center">
-                <button className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center shadow-md">
+              {/* Swap button */}
+              <div className="flex items-center justify-center py-1">
+                <button
+                  onClick={handleSwap}
+                  className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0047AB] to-[#00F5FF]
+                             flex items-center justify-center shadow-md
+                             hover:scale-110 active:scale-95 transition-transform"
+                >
                   <ArrowLeftRight size={16} className="text-white" />
                 </button>
               </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-1.5">
-                  <MapPin size={12} className="text-[#00F5FF]" /> To
-                </label>
-                <select value={to} onChange={(e) => setTo(e.target.value)} className={inputClass}>
-                  {destinations.map((d) => <option key={d}>{d}</option>)}
-                </select>
-              </div>
+              <AirportSearch
+                label="To"
+                value={to}
+                onChange={setTo}
+                placeholder="City or airport code..."
+              />
             </div>
 
             {/* Dates */}
@@ -103,14 +149,26 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
                 <label className="flex items-center gap-2 text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-1.5">
                   <Calendar size={12} className="text-[#00F5FF]" /> Depart
                 </label>
-                <input type="date" value={departDate} onChange={(e) => setDepartDate(e.target.value)} className={inputClass} />
+                <input
+                  type="date"
+                  value={departDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setDepartDate(e.target.value)}
+                  className={inputClass}
+                />
               </div>
               {tripType === 'round-trip' && (
                 <div>
                   <label className="flex items-center gap-2 text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-1.5">
                     <Calendar size={12} className="text-[#00F5FF]" /> Return
                   </label>
-                  <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className={inputClass} />
+                  <input
+                    type="date"
+                    value={returnDate}
+                    min={departDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    className={inputClass}
+                  />
                 </div>
               )}
             </div>
@@ -121,15 +179,25 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
                 <Users size={12} className="text-[#00F5FF]" /> Passengers
               </label>
               <div className="flex items-center gap-3 h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60">
-                <button onClick={() => setPassengers(Math.max(1, passengers - 1))} className="w-8 h-8 rounded-lg bg-white/40 font-black text-[#0047AB] hover:bg-white/60 transition-colors">−</button>
-                <span className="flex-1 text-center font-black text-[#001F3F]">{passengers} {passengers === 1 ? 'Adult' : 'Adults'}</span>
-                <button onClick={() => setPassengers(Math.min(9, passengers + 1))} className="w-8 h-8 rounded-lg bg-white/40 font-black text-[#0047AB] hover:bg-white/60 transition-colors">+</button>
+                <button
+                  onClick={() => setPassengers(Math.max(1, passengers - 1))}
+                  className="w-8 h-8 rounded-lg bg-white/40 font-black text-[#0047AB] hover:bg-white/60 transition-colors text-lg"
+                >−</button>
+                <span className="flex-1 text-center font-black text-[#001F3F]">
+                  {passengers} {passengers === 1 ? 'Adult' : 'Adults'}
+                </span>
+                <button
+                  onClick={() => setPassengers(Math.min(9, passengers + 1))}
+                  className="w-8 h-8 rounded-lg bg-white/40 font-black text-[#0047AB] hover:bg-white/60 transition-colors text-lg"
+                >+</button>
               </div>
             </div>
 
             {/* Cabin class */}
             <div>
-              <label className="text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-2 block">Cabin Class</label>
+              <label className="text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-2 block">
+                Cabin Class
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {cabinClasses.map((c) => (
                   <button
@@ -138,7 +206,7 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                       cabin === c.label
                         ? 'bg-gradient-to-r from-[#0047AB] to-[#00F5FF] text-white shadow-md'
-                        : 'bg-white/30 border-[1.5px] border-white/60 text-[#001F3F]/60'
+                        : 'bg-white/30 border-[1.5px] border-white/60 text-[#001F3F]/60 hover:bg-white/50'
                     }`}
                   >
                     <span>{c.icon}</span>
@@ -148,7 +216,7 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
               </div>
             </div>
 
-            <PremiumButton variant="primary" size="large" onClick={onSearch}>
+            <PremiumButton variant="primary" size="large" onClick={handleSearch}>
               <Plane size={18} />
               Search Flights
               <ArrowRight size={18} />
@@ -158,13 +226,25 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
 
         {/* Popular routes */}
         <div>
-          <h2 className="text-xs font-black text-[#001F3F]/60 uppercase tracking-widest mb-3">Popular Routes</h2>
-          <div className="grid grid-cols-3 gap-2">
+          <h2 className="text-xs font-black text-[#001F3F]/60 uppercase tracking-widest mb-3">
+            Popular Routes from India
+          </h2>
+          <div className="grid grid-cols-2 gap-2">
             {popularRoutes.map((r, i) => (
-              <LiquidGlassCard key={i} hoverable size="small" className="text-center cursor-pointer" onClick={onSearch}>
-                <div className="text-2xl mb-1">{r.flag}</div>
-                <div className="text-xs font-black text-[#001F3F]">{r.from} → {r.to}</div>
-                <div className="text-sm font-black text-[#0047AB] mt-0.5">{r.price}</div>
+              <LiquidGlassCard
+                key={i}
+                hoverable
+                size="small"
+                className="cursor-pointer"
+                onClick={() => handlePopularRoute(r.from, r.to)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{r.flag}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-black text-[#001F3F] truncate">{r.label}</div>
+                    <div className="text-sm font-black text-[#0047AB]">from {r.price}</div>
+                  </div>
+                </div>
               </LiquidGlassCard>
             ))}
           </div>
