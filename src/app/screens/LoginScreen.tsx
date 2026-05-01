@@ -99,6 +99,17 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           {/* Main Login Card */}
           <LiquidGlassCard size="large">
             <div className="space-y-6">
+              {/* Error Banner — shown at the very top so it's always visible */}
+              {error && (
+                <div className="rounded-xl bg-red-500/15 border border-red-500/40 px-4 py-3 text-sm text-red-700 font-semibold">
+                  ⚠️ {error}
+                </div>
+              )}
+              {successMsg && (
+                <div className="rounded-xl bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-700 font-medium">
+                  ✅ {successMsg}
+                </div>
+              )}
               {/* OAuth Buttons */}
               <div className="space-y-3">
                 <PremiumButton
@@ -156,6 +167,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
+                    autoComplete="email"
                     className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-medium placeholder:text-[#001F3F]/40 focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)] transition-all"
                   />
                 </div>
@@ -208,18 +220,6 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   )}
                 </PremiumButton>
               </form>
-
-              {/* Error / Success messages */}
-              {error && (
-                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 font-medium">
-                  {error}
-                </div>
-              )}
-              {successMsg && (
-                <div className="rounded-xl bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-700 font-medium">
-                  {successMsg}
-                </div>
-              )}
 
               {/* Toggle Login/Signup */}
               <div className="text-center">
