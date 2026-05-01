@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plane, Cloud, MapPin, Calendar, TrendingDown, Shield, Zap, Brain, ArrowRight, User } from 'lucide-react';
+import { Search, Plane, Cloud, MapPin, Calendar, TrendingDown, Shield, Zap, Brain, ArrowRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 interface LandingPageProps {
