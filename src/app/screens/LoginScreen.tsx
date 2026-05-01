@@ -13,58 +13,51 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleOAuthLogin = async (provider: 'google' | 'apple') => {
     if (!supabase) {
-      alert('Supabase credentials are not configured. Please add them to your .env file.');
+      setError('Supabase is not configured — check your .env file.');
       return;
     }
-    
+    setError('');
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        }
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      alert(error.message || 'An error occurred during authentication');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: provider === 'google' ? { access_type: 'offline', prompt: 'consent' } : undefined,
+      },
+    });
+    if (error) {
+      setError(error.message);
       setIsLoading(false);
     }
+    // On success the browser navigates away — no need to reset loading
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     if (!supabase) {
-      alert('Supabase credentials are not configured. Please add them to your .env file.');
+      setError('Supabase is not configured — check your .env file.');
       return;
     }
-    
+    setError('');
     setIsLoading(true);
-    
     try {
       if (isLogin) {
-        // Sign In
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         onLoginSuccess();
       } else {
-        // Sign Up
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        alert('Registration successful! Please check your email to verify your account.');
-        setIsLogin(true); // Switch back to login
+        setSuccessMsg('Account created! Check your email to verify, then sign in.');
+        setIsLogin(true);
       }
-    } catch (error: any) {
-      alert(error.message || 'Authentication failed');
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
@@ -178,6 +171,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    autoComplete="current-password"
                     className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-medium placeholder:text-[#001F3F]/40 focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)] transition-all"
                   />
                 </div>
@@ -215,11 +209,23 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 </PremiumButton>
               </form>
 
+              {/* Error / Success messages */}
+              {error && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 font-medium">
+                  {error}
+                </div>
+              )}
+              {successMsg && (
+                <div className="rounded-xl bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-700 font-medium">
+                  {successMsg}
+                </div>
+              )}
+
               {/* Toggle Login/Signup */}
               <div className="text-center">
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }}
                   className="text-sm text-[#001F3F]/70"
                 >
                   {isLogin ? "Don't have an account? " : 'Already have an account? '}

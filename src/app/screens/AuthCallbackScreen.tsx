@@ -16,87 +16,89 @@ export function AuthCallbackScreen() {
   };
 
   useEffect(() => {
-    log('Callback screen mounted');
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+
+    log(`URL params: code=${params.has('code')} error=${params.has('error')} hash_token=${hashParams.has('access_token')}`);
     log(`Supabase configured: ${supabase !== null}`);
-    log(`Current URL: ${window.location.href}`);
+
+    // Surface any OAuth error passed back in the URL immediately
+    const urlError = params.get('error') || hashParams.get('error');
+    const urlErrorDesc = params.get('error_description') || hashParams.get('error_description');
+    if (urlError) {
+      const msg = urlErrorDesc ? `${urlError}: ${decodeURIComponent(urlErrorDesc)}` : urlError;
+      log(`OAuth error from provider: ${msg}`);
+      setStatus(`❌ ${msg}`);
+      setTimeout(() => navigate('/login', { replace: true }), 5000);
+      return;
+    }
 
     if (!supabase) {
-      setStatus('❌ Supabase not configured — check Vercel env vars');
-      log('Supabase is null — VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY missing');
+      setStatus('❌ Supabase not configured');
+      log('Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env');
       setTimeout(() => navigate('/login'), 4000);
       return;
     }
 
+    const doLogin = (user: any) => {
+      login({
+        fullName: user.user_metadata?.full_name || '',
+        email: user.email || '',
+        phone: '',
+        homeAirport: '',
+        dateOfBirth: '',
+        preferences: [],
+      });
+      setStatus('✅ Signed in! Redirecting...');
+      setTimeout(() => {
+        navigate(user.user_metadata?.full_name ? '/home' : '/profile-setup', { replace: true });
+      }, 800);
+    };
+
+    // Supabase auto-exchanges the PKCE code from the URL on client init
+    // (detectSessionInUrl: true). We just need to wait for the session.
+    // First check if it's already done:
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         log(`getSession error: ${error.message}`);
-        setStatus(`❌ Error: ${error.message}`);
-        setTimeout(() => navigate('/login'), 4000);
+        setStatus(`❌ ${error.message}`);
+        setTimeout(() => navigate('/login', { replace: true }), 4000);
         return;
       }
 
       if (session?.user) {
-        log(`Session found! User: ${session.user.email}`);
-        log(`full_name in metadata: ${session.user.user_metadata?.full_name || 'NONE'}`);
-        setStatus('✅ Signed in! Redirecting...');
-        const user = session.user;
-        login({
-          fullName: user.user_metadata?.full_name || '',
-          email: user.email || '',
-          phone: '',
-          homeAirport: '',
-          dateOfBirth: '',
-          preferences: [],
-        });
-        setTimeout(() => {
-          if (!user.user_metadata?.full_name) {
-            navigate('/profile-setup', { replace: true });
-          } else {
-            navigate('/home', { replace: true });
-          }
-        }, 1000);
-      } else {
-        log('No session from getSession — waiting for SIGNED_IN event...');
-        setStatus('Verifying session...');
-
-        if (!supabase) { navigate('/login', { replace: true }); return; }
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          log(`Auth event: ${event}`);
-          if (event === 'SIGNED_IN' && session?.user) {
-            const user = session.user;
-            log(`SIGNED_IN! User: ${user.email}`);
-            setStatus('✅ Signed in! Redirecting...');
-            login({
-              fullName: user.user_metadata?.full_name || '',
-              email: user.email || '',
-              phone: '',
-              homeAirport: '',
-              dateOfBirth: '',
-              preferences: [],
-            });
-            subscription.unsubscribe();
-            setTimeout(() => {
-              if (!user.user_metadata?.full_name) {
-                navigate('/profile-setup', { replace: true });
-              } else {
-                navigate('/home', { replace: true });
-              }
-            }, 1000);
-          } else if (event === 'SIGNED_OUT') {
-            log('SIGNED_OUT event received');
-            subscription.unsubscribe();
-            navigate('/login', { replace: true });
-          }
-        });
-
-        setTimeout(() => {
-          log('Timeout — no session detected after 5s');
-          setStatus('❌ Session not detected. Returning to login...');
-          subscription.unsubscribe();
-          setTimeout(() => navigate('/login', { replace: true }), 2000);
-        }, 5000);
+        log(`Session ready immediately. User: ${session.user.email}`);
+        doLogin(session.user);
+        return;
       }
+
+      // Not ready yet — listen for SIGNED_IN which fires once the
+      // automatic PKCE exchange completes
+      log('Session pending — waiting for SIGNED_IN event...');
+
+      const { data: { subscription } } = supabase!.auth.onAuthStateChange((event, session) => {
+        log(`Auth event: ${event}`);
+        if (event === 'SIGNED_IN' && session?.user) {
+          log(`SIGNED_IN! User: ${session.user.email}`);
+          subscription.unsubscribe();
+          doLogin(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          subscription.unsubscribe();
+          navigate('/login', { replace: true });
+        }
+      });
+
+      const timer = setTimeout(() => {
+        log('Timeout — no session detected after 8s');
+        setStatus('❌ Session not detected. Check debug log.');
+        subscription.unsubscribe();
+        setTimeout(() => navigate('/login', { replace: true }), 3000);
+      }, 8000);
+
+      return () => {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+      };
     });
   }, [login, navigate]);
 
@@ -109,7 +111,6 @@ export function AuthCallbackScreen() {
         <div className="w-10 h-10 border-4 border-[#0047AB]/20 border-t-[#0047AB] rounded-full animate-spin" />
         <p className="text-[#001F3F] font-semibold text-lg text-center">{status}</p>
 
-        {/* Debug log — visible on screen */}
         {debugLog.length > 0 && (
           <div className="w-full bg-black/80 rounded-xl p-4 text-left">
             <p className="text-yellow-400 text-xs font-bold mb-2">Debug Log:</p>
@@ -122,4 +123,3 @@ export function AuthCallbackScreen() {
     </div>
   );
 }
-

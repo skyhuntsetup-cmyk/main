@@ -52,11 +52,13 @@ function AppContent() {
         preferences: [],
       });
 
-      // New user (no full_name saved yet) → complete profile setup first
+      // Let AuthCallbackScreen handle navigation during OAuth redirect;
+      // only navigate here for non-callback routes (e.g. email login).
+      if (window.location.pathname === '/auth/callback') return;
+
       if (!user.user_metadata?.full_name) {
         navigateRef.current('/profile-setup', { replace: true });
       } else {
-        // Returning user → go straight to the app home
         navigateRef.current('/home', { replace: true });
       }
     };
