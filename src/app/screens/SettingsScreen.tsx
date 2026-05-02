@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as SettingsIcon, Award, Search, MapPin, Sparkles, X, Link, Star, Cloud } from 'lucide-react';
+import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as SettingsIcon, Award, Search, MapPin, Sparkles, X, Link, Star, Cloud, ChevronLeft, Save } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { useStore } from '../../store/useStore';
@@ -10,11 +10,19 @@ export function SettingsScreen() {
   const alerts = useStore((state) => state.alerts);
   const recentSearches = useStore((state) => state.recentSearches);
   const setAccountTier = useStore((state) => state.setAccountTier);
+  const updateProfile = useStore((state) => state.updateProfile);
   
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  
+  // Deal Preferences Form State
+  const [dealPrefs, setDealPrefs] = useState(user?.dealPreferences || {
+    maxBudget: 50000,
+    cabinClass: 'economy' as const,
+    maxLayovers: 1,
+  });
   
   const uniqueRoutes = new Set(recentSearches.map(s => s.code)).size;
-  
   const currentTier = user?.accountTier || 'free';
   
   const tierLabels = {
@@ -27,28 +35,28 @@ export function SettingsScreen() {
     {
       title: 'Data & Integrations',
       items: [
-        { icon: Cloud, label: 'Data Sources', sub: 'Google Flights, Booking.com, Airbnb', color: '#0047AB' },
-        { icon: Link, label: 'Connected Accounts', sub: 'Frequent flyer programs', color: '#3498DB' },
+        { id: 'data-sources', icon: Cloud, label: 'Data Sources', sub: 'Google Flights, Booking.com, Airbnb', color: '#0047AB' },
+        { id: 'connected-accounts', icon: Link, label: 'Connected Accounts', sub: 'Frequent flyer programs', color: '#3498DB' },
       ],
     },
     {
       title: 'Preferences',
       items: [
-        { icon: Sparkles, label: 'Deal Preferences', sub: 'Max budget, cabin class, layovers', color: '#00A854' },
-        { icon: Bell, label: 'Notification Settings', sub: 'Email, Push, SMS', color: '#FF6B6B' },
+        { id: 'deal-preferences', icon: Sparkles, label: 'Deal Preferences', sub: 'Max budget, cabin class, layovers', color: '#00A854' },
+        { id: 'notifications', icon: Bell, label: 'Notification Settings', sub: 'Email, Push, SMS', color: '#FF6B6B' },
       ],
     },
     {
       title: 'Account',
       items: [
-        { icon: User, label: 'Profile', sub: user?.fullName || 'Manage profile', color: '#F39C12' },
-        { icon: Lock, label: 'Privacy & Security', sub: 'Password, sessions', color: '#8E44AD' },
+        { id: 'profile', icon: User, label: 'Profile', sub: user?.fullName || 'Manage profile', color: '#F39C12' },
+        { id: 'security', icon: Lock, label: 'Privacy & Security', sub: 'Password, sessions', color: '#8E44AD' },
       ],
     },
     {
       title: 'Help',
       items: [
-        { icon: HelpCircle, label: 'About & Help', sub: 'FAQ, support, feedback', color: '#2C3E50' },
+        { id: 'help', icon: HelpCircle, label: 'About & Help', sub: 'FAQ, support, feedback', color: '#2C3E50' },
       ],
     },
   ];
@@ -59,6 +67,114 @@ export function SettingsScreen() {
     { value: uniqueRoutes, label: 'Routes', icon: MapPin, color: 'from-[#00A854] to-[#008f47]' },
     { value: currentTier === 'pro' ? '∞' : currentTier === 'premium' ? 20 : 5, label: 'Alert Limit', icon: Star, color: 'from-[#F39C12] to-[#e89c0c]' },
   ];
+
+  const handleSaveDealPrefs = () => {
+    updateProfile({ dealPreferences: dealPrefs });
+    setActivePanel(null);
+  };
+
+  if (activePanel === 'deal-preferences') {
+    return (
+      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up">
+        <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+          <button onClick={() => setActivePanel(null)} className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center text-[#001F3F]/50">
+            <ChevronLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-[#001F3F]">Deal Preferences</h1>
+            <p className="text-xs text-[#001F3F]/50 font-medium">Fine-tune your AI alerts</p>
+          </div>
+        </div>
+
+        <div className="px-5 space-y-5">
+          <LiquidGlassCard>
+            <div className="mb-4">
+              <div className="flex justify-between items-end mb-2">
+                <label className="text-sm font-black text-[#001F3F] uppercase tracking-wide">Max Default Budget</label>
+                <span className="text-lg font-black text-[#00A854]">₹{dealPrefs.maxBudget.toLocaleString('en-IN')}</span>
+              </div>
+              <input 
+                type="range" 
+                min="5000" 
+                max="200000" 
+                step="1000"
+                value={dealPrefs.maxBudget}
+                onChange={(e) => setDealPrefs({...dealPrefs, maxBudget: Number(e.target.value)})}
+                className="w-full accent-[#00A854]" 
+              />
+              <div className="text-xs text-[#001F3F]/50 font-medium mt-2">
+                AI will prioritize deals falling under this global budget threshold.
+              </div>
+            </div>
+          </LiquidGlassCard>
+
+          <LiquidGlassCard>
+            <div className="mb-2 text-sm font-black text-[#001F3F] uppercase tracking-wide">Cabin Class</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'economy', label: 'Economy' },
+                { id: 'premium_economy', label: 'Premium Econ' },
+                { id: 'business', label: 'Business' },
+                { id: 'first', label: 'First Class' }
+              ].map(cls => (
+                <button 
+                  key={cls.id}
+                  onClick={() => setDealPrefs({...dealPrefs, cabinClass: cls.id as any})}
+                  className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${
+                    dealPrefs.cabinClass === cls.id 
+                    ? 'border-[#0047AB] bg-[#0047AB]/5 text-[#0047AB]' 
+                    : 'border-transparent bg-white/50 text-[#001F3F]/60'
+                  }`}
+                >
+                  {cls.label}
+                </button>
+              ))}
+            </div>
+          </LiquidGlassCard>
+
+          <LiquidGlassCard>
+            <div className="mb-2 text-sm font-black text-[#001F3F] uppercase tracking-wide">Max Layovers</div>
+            <div className="flex gap-2">
+              {[0, 1, 2, 3].map(num => (
+                <button 
+                  key={num}
+                  onClick={() => setDealPrefs({...dealPrefs, maxLayovers: num})}
+                  className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border-2 ${
+                    dealPrefs.maxLayovers === num 
+                    ? 'border-[#F39C12] bg-[#F39C12]/5 text-[#F39C12]' 
+                    : 'border-transparent bg-white/50 text-[#001F3F]/60'
+                  }`}
+                >
+                  {num === 0 ? 'Direct' : num === 3 ? '3+' : num}
+                </button>
+              ))}
+            </div>
+          </LiquidGlassCard>
+
+          <PremiumButton variant="primary" className="w-full h-14 text-lg mt-8" onClick={handleSaveDealPrefs}>
+            <Save size={18} className="mr-2" />
+            Save Preferences
+          </PremiumButton>
+        </div>
+      </div>
+    );
+  }
+
+  // Placeholder for other panels
+  if (activePanel) {
+    return (
+      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up flex flex-col items-center justify-center px-5 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center shadow-lg mb-4">
+          <SettingsIcon size={24} className="text-white" />
+        </div>
+        <h1 className="text-2xl font-black text-[#001F3F] mb-2">Coming Soon</h1>
+        <p className="text-sm text-[#001F3F]/50 font-medium mb-6">The {activePanel.replace('-', ' ')} panel is currently under development.</p>
+        <PremiumButton variant="glass" onClick={() => setActivePanel(null)}>
+          <ChevronLeft size={16} /> Go Back
+        </PremiumButton>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-28">
@@ -77,7 +193,7 @@ export function SettingsScreen() {
 
       <div className="px-5 space-y-4">
         {/* Profile card */}
-        <LiquidGlassCard className="border-[#0047AB]/20">
+        <LiquidGlassCard className="border-[#0047AB]/20 cursor-pointer hover:border-[#0047AB]/40 transition-colors" onClick={() => setActivePanel('profile')}>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center shadow-[0_4px_16px_rgba(0,71,171,0.35)] flex-shrink-0">
               <span className="text-white text-xl font-black">{user ? user.fullName.substring(0, 2).toUpperCase() : 'ME'}</span>
@@ -127,6 +243,7 @@ export function SettingsScreen() {
               {section.items.map((item, i) => (
                 <button
                   key={i}
+                  onClick={() => setActivePanel(item.id)}
                   className="w-full flex items-center gap-3 py-3 first:pt-0 last:pb-0 hover:opacity-80 transition-opacity"
                 >
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${item.color}18` }}>

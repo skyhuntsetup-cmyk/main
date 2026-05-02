@@ -10,6 +10,11 @@ interface UserProfile {
   dateOfBirth: string;
   preferences: string[];
   accountTier: 'free' | 'premium' | 'pro';
+  dealPreferences?: {
+    maxBudget: number;
+    cabinClass: 'economy' | 'premium_economy' | 'business' | 'first';
+    maxLayovers: number;
+  };
 }
 
 export interface RecentSearch {
