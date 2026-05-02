@@ -11,7 +11,62 @@ interface ResultsScreenProps {
   onBack?: () => void;
 }
 
-// Removed mockFlights to ensure we never accidentally show fake data
+const mockFlights = [
+  {
+    id: 'mock-1',
+    airline: 'IndiGo',
+    departureTime: '08:30',
+    arrivalTime: '20:15',
+    duration: '23h',
+    stops: '2 stops (4h in Dubai)',
+    price: 41200,
+    savings: 3200,
+    rating: 4.2,
+    reviews: 2400,
+    delay: 0,
+    isMonitoring: true,
+  },
+  {
+    id: 'mock-2',
+    airline: 'Air India',
+    departureTime: '10:00',
+    arrivalTime: '22:30',
+    duration: '24h 30m',
+    stops: '1 stop (3h in Frankfurt)',
+    price: 43500,
+    savings: 1500,
+    rating: 4.0,
+    reviews: 1800,
+    delay: 12,
+    isMonitoring: false,
+  },
+  {
+    id: 'mock-3',
+    airline: 'Emirates',
+    departureTime: '14:30',
+    arrivalTime: '01:45+1',
+    duration: '23h 15m',
+    stops: '1 stop (2h in Dubai)',
+    price: 48900,
+    rating: 4.5,
+    reviews: 3200,
+    delay: 0,
+    isMonitoring: false,
+  },
+  {
+    id: 'mock-4',
+    airline: 'British Airways',
+    departureTime: '16:00',
+    arrivalTime: '02:30+1',
+    duration: '22h 30m',
+    stops: 'Non-stop',
+    price: 52000,
+    rating: 4.3,
+    reviews: 2100,
+    delay: 0,
+    isMonitoring: false,
+  },
+];
 
 const sortOptions = ['Cheapest', 'Fastest', 'Best rated', 'Non-stop'];
 
@@ -25,22 +80,22 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
 
-  const rawDisplayFlights = apiFlights 
+  const rawDisplayFlights = apiFlights
     ? apiFlights.map((f, i) => ({
-        id: f.id || `flight-${i}`,
-        airline: f.airline,
-        departureTime: new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        arrivalTime: new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        duration: f.duration,
-        stops: f.stopDetails || (f.stops === 0 ? 'Non-stop' : `${f.stops} stop(s)`),
-        price: f.price,
-        savings: i === 0 ? 3200 : 0,
-        rating: 4.5 - (i % 3) * 0.2, // Fake varying ratings for sorting
-        reviews: 1200 + Math.floor(Math.random() * 1000),
-        delay: 0,
-        isMonitoring: i === 0
-      }))
-    : [];
+      id: f.id || `flight-${i}`,
+      airline: f.airline,
+      departureTime: new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      arrivalTime: new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      duration: f.duration,
+      stops: f.stopDetails || (f.stops === 0 ? 'Non-stop' : `${f.stops} stop(s)`),
+      price: f.price,
+      savings: i === 0 ? 3200 : 0,
+      rating: 4.5 - (i % 3) * 0.2, // Fake varying ratings for sorting
+      reviews: 1200 + Math.floor(Math.random() * 1000),
+      delay: 0,
+      isMonitoring: i === 0
+    }))
+    : mockFlights;
 
   let displayFlights = [...rawDisplayFlights];
   if (sortBy === 'Cheapest') {
@@ -112,11 +167,10 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
                   setSortBy(opt);
                   setVisibleCount(5); // Reset visible count on filter change
                 }}
-                className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                  sortBy === opt
+                className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all ${sortBy === opt
                     ? 'bg-gradient-to-r from-[#0047AB] to-[#00F5FF] text-white shadow-md'
                     : 'bg-white/30 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F]/60'
-                }`}
+                  }`}
               >
                 {opt}
               </button>
@@ -149,9 +203,9 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
       {/* Flight list */}
       <div className="px-4 pt-2 pb-8 space-y-3">
         {displayFlights.slice(0, visibleCount).map((flight) => (
-          <EnhancedFlightCard 
-            key={flight.id} 
-            {...flight} 
+          <EnhancedFlightCard
+            key={flight.id}
+            {...flight}
             onBook={() => {
               // Simulated booking redirect
               alert(`Redirecting you to complete your booking with ${flight.airline}...`);
@@ -160,8 +214,8 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
         ))}
 
         {visibleCount < displayFlights.length && (
-          <PremiumButton 
-            variant="glass" 
+          <PremiumButton
+            variant="glass"
             className="w-full mt-4"
             onClick={() => setVisibleCount(v => v + 5)}
           >

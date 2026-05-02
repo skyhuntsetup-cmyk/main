@@ -41,8 +41,20 @@ export interface SearchParams {
 // Step 1: Search flights using Google Flights API
 export async function searchFlights(params: SearchParams): Promise<FlightResult[]> {
   if (!RAPIDAPI_KEY) {
-    console.warn('[FlightAPI] VITE_RAPIDAPI_KEY not set — using mock data');
-    return getMockFlights(params);
+    console.error('[FlightAPI] VITE_RAPIDAPI_KEY not set in environment!');
+    return [{
+      id: 'error-key',
+      price: 0,
+      currency: 'USD',
+      airline: 'ERROR: API KEY MISSING in environment',
+      departureTime: params.departDate + 'T00:00:00',
+      arrivalTime: params.departDate + 'T00:00:00',
+      duration: '0h',
+      stops: 0,
+      stopDetails: 'Error',
+      from: params.fromCode,
+      to: params.toCode,
+    }];
   }
 
   try {
@@ -95,7 +107,7 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
   try {
     const itineraries = data?.data?.itineraries || {};
     const allFlights = [...(itineraries.topFlights || []), ...(itineraries.otherFlights || [])];
-    
+
     if (allFlights.length === 0) return [];
 
     return allFlights.map((item: any, idx: number) => {
@@ -148,50 +160,7 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
   }
 }
 
-// Mock data for when API key is not configured
-export function getMockFlights(params: SearchParams): FlightResult[] {
-  return [
-    {
-      id: 'mock-1',
-      price: 42500,
-      currency: 'INR',
-      airline: 'Air India',
-      departureTime: `${params.departDate}T06:30:00`,
-      arrivalTime: `${params.departDate}T10:45:00`,
-      duration: '4h 15m',
-      stops: 0,
-      stopDetails: 'Direct',
-      from: params.fromCode,
-      to: params.toCode,
-    },
-    {
-      id: 'mock-2',
-      price: 38900,
-      currency: 'INR',
-      airline: 'IndiGo',
-      departureTime: `${params.departDate}T09:15:00`,
-      arrivalTime: `${params.departDate}T14:30:00`,
-      duration: '5h 15m',
-      stops: 1,
-      stopDetails: '1 stop',
-      from: params.fromCode,
-      to: params.toCode,
-    },
-    {
-      id: 'mock-5',
-      price: 35600,
-      currency: 'INR',
-      airline: 'SpiceJet',
-      departureTime: `${params.departDate}T11:45:00`,
-      arrivalTime: `${params.departDate}T18:30:00`,
-      duration: '6h 45m',
-      stops: 1,
-      stopDetails: '1 stop',
-      from: params.fromCode,
-      to: params.toCode,
-    },
-  ];
-}
+// Removed mock flights to force real errors.
 
 export async function searchAirportsByQuery(_query: string): Promise<any[]> {
   // Since Google Flights natively supports IATA, we don't need to resolve EntityIDs anymore.
