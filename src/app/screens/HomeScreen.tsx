@@ -28,6 +28,8 @@ const liveDeals = [
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const user = useStore((state) => state.user);
+  const alerts = useStore((state) => state.alerts);
+  const activeAlerts = alerts.filter(a => a.active).length;
   const storeRecentSearches = useStore((state) => state.recentSearches);
   const recentSearches = storeRecentSearches.length > 0 ? storeRecentSearches : mockRecentSearches;
 
@@ -57,8 +59,8 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         {/* Stat Pills */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { value: '5', label: 'Routes', icon: MapPin, color: 'from-[#0047AB] to-[#1a6fd4]' },
-            { value: '8', label: 'Alerts', icon: Bell, color: 'from-[#FF6B6B] to-[#f15959]' },
+            { value: recentSearches.length.toString(), label: 'Routes', icon: MapPin, color: 'from-[#0047AB] to-[#1a6fd4]' },
+            { value: alerts.length.toString(), label: 'Alerts', icon: Bell, color: 'from-[#FF6B6B] to-[#f15959]' },
             { value: '12', label: 'Deals', icon: Zap, color: 'from-[#00A854] to-[#008f47]' },
           ].map((stat) => (
             <LiquidGlassCard key={stat.label} size="small" className="text-center py-4">
@@ -185,8 +187,12 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               <Sparkles size={22} className="text-white" />
             </div>
             <div className="flex-1">
-              <div className="font-black text-[#001F3F] text-sm">AI monitoring 8 routes</div>
-              <div className="text-xs text-[#001F3F]/50 font-medium mt-0.5">Saved ₹24,500 this month</div>
+              <div className="font-black text-[#001F3F] text-sm">
+                {activeAlerts > 0 ? `AI monitoring ${activeAlerts} routes` : 'Setup AI Price Tracking'}
+              </div>
+              <div className="text-xs text-[#001F3F]/50 font-medium mt-0.5">
+                {activeAlerts > 0 ? 'Watching for price drops' : 'Never miss a flight deal'}
+              </div>
             </div>
             <PremiumButton variant="primary" size="small" onClick={() => onNavigate('alerts')}>
               View
