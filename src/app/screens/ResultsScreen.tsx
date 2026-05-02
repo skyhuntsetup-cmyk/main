@@ -80,7 +80,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
 
-  const rawDisplayFlights = apiFlights && apiFlights.length > 0 
+  const rawDisplayFlights = apiFlights 
     ? apiFlights.map((f, i) => ({
         id: f.id || `flight-${i}`,
         airline: f.airline,

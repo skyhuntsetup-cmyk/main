@@ -68,12 +68,18 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
   try {
     // Use provided entity IDs or fetch them sequentially to avoid rate limits
     let fromEntity: string | null | undefined = params.fromEntityId;
+    let didFetchFrom = false;
     if (!fromEntity) {
       fromEntity = await getSkyId(params.fromCity || params.fromCode);
+      didFetchFrom = true;
     }
     
     let toEntity: string | null | undefined = params.toEntityId;
     if (!toEntity) {
+      if (didFetchFrom) {
+        // Sleep for 1.2s to bypass RapidAPI 1 req/sec strict limit
+        await new Promise(resolve => setTimeout(resolve, 1200));
+      }
       toEntity = await getSkyId(params.toCity || params.toCode);
     }
 
@@ -140,7 +146,7 @@ function parseFlightResults(data: any, params: SearchParams): FlightResult[] {
         departureTime: leg?.departure || '',
         arrivalTime: leg?.arrival || '',
         duration: formatDuration(leg?.durationInMinutes),
-        stops: (leg?.stopCount || 0),
+        stops: leg?.stopCount !== undefined ? leg.stopCount : 0,
         stopDetails: leg?.stopCount > 0 ? `${leg.stopCount} stop${leg.stopCount > 1 ? 's' : ''}` : 'Direct',
         from: params.fromCode,
         to: params.toCode,
