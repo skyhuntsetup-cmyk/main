@@ -57,12 +57,11 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
       departure_id: params.fromCode,
       arrival_id: params.toCode,
       outbound_date: params.departDate,
-      adults: String(params.adults || 1),
+      adults: String(params.adults ?? 1),
       travel_class: cabinMap[params.cabinClass || 'economy'],
       currency: params.currency || 'USD',
       language_code: 'en-US',
       country_code: 'US',
-      search_type: 'best'
     });
 
     if (params.returnDate) {

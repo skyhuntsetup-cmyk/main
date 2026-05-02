@@ -157,17 +157,20 @@ export function SearchLoadingScreen() {
     }
   }, [searchState]);
 
-  // Fetch destination travel data
+  // Fetch destination travel data with actual user search parameters
   useEffect(() => {
-    if (destination.city) {
-      fetchBookingHotels(destination.city).then(setLiveHotels);
-      fetchAirbnbProperties(destination.city).then(setLiveAirbnbs);
-    }
+    const arrivalDate  = searchState?.departDate;
+    const returnDate   = searchState?.tripType === 'round-trip' ? searchState?.returnDate : undefined;
     const sourceCountry = searchState?.from?.country || 'India';
-    const destCountry = destination.country || 'USA';
-    fetchVisaDetails().then(setLiveVisa);
+    const destCountry   = destination.country || 'United States';
+
+    if (destination.city) {
+      fetchBookingHotels(destination.city, arrivalDate, returnDate).then(setLiveHotels);
+      fetchAirbnbProperties(destination.city, arrivalDate, returnDate).then(setLiveAirbnbs);
+    }
+    fetchVisaDetails(sourceCountry, destCountry, arrivalDate).then(setLiveVisa);
     fetchEmbassyDetails(sourceCountry, destCountry).then(setLiveEmbassy);
-  }, [destination.city, destination.country, searchState?.from?.country]);
+  }, [destination.city, destination.country, searchState?.from?.country, searchState?.departDate, searchState?.returnDate, searchState?.tripType]);
 
   // Redirect to results after duration
   useEffect(() => {
