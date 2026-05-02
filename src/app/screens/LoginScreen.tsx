@@ -1,43 +1,26 @@
 import { useState } from 'react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
-import { Plane, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Plane, Mail, Phone, ArrowRight, Sparkles, MessageCircle, Lock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
+type AuthMethod = 'email' | 'whatsapp';
+
 export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showOtpInput, setShowOtpInput] = useState(false);
 
-  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
-    if (!supabase) {
-      setError('Supabase is not configured — check your .env file.');
-      return;
-    }
-    setError('');
-    setIsLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: provider === 'google' ? { access_type: 'offline', prompt: 'consent' } : undefined,
-      },
-    });
-    if (error) {
-      setError(error.message);
-      setIsLoading(false);
-    }
-    // On success the browser navigates away — no need to reset loading
-  };
-
-  const handleEmailLogin = async (e: { preventDefault(): void }) => {
+  const handleSendMagicLink = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     if (!supabase) {
       setError('Supabase is not configured — check your .env file.');
@@ -46,18 +29,62 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setError('');
     setIsLoading(true);
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        onLoginSuccess();
-      } else {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        setSuccessMsg('Account created! Check your email to verify, then sign in.');
-        setIsLogin(true);
-      }
+      const { error } = await supabase.auth.signInWithOtp({ 
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+      setSuccessMsg('Magic link sent! Check your inbox to sign in.');
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || 'Failed to send magic link');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendWhatsAppCode = async (e: { preventDefault(): void }) => {
+    e.preventDefault();
+    if (!supabase) {
+      setError('Supabase is not configured — check your .env file.');
+      return;
+    }
+    setError('');
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ 
+        phone, 
+        options: { channel: 'whatsapp' } 
+      });
+      if (error) throw error;
+      setSuccessMsg('WhatsApp code sent!');
+      setShowOtpInput(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send WhatsApp code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: { preventDefault(): void }) => {
+    e.preventDefault();
+    if (!supabase) {
+      setError('Supabase is not configured — check your .env file.');
+      return;
+    }
+    setError('');
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ 
+        phone, 
+        token: otp, 
+        type: 'sms' 
+      });
+      if (error) throw error;
+      onLoginSuccess();
+    } catch (err: any) {
+      setError(err.message || 'Invalid code');
     } finally {
       setIsLoading(false);
     }
@@ -92,14 +119,43 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               Welcome to SkyDeal
             </h1>
             <p className="text-[#001F3F]/70 font-medium">
-              {isLogin ? 'Sign in to continue your journey' : 'Create your account and start saving'}
+              Sign in instantly — no password required
             </p>
           </div>
 
           {/* Main Login Card */}
           <LiquidGlassCard size="large">
             <div className="space-y-6">
-              {/* Error Banner — shown at the very top so it's always visible */}
+              
+              {/* Auth Method Tabs */}
+              {!showOtpInput && (
+                <div className="flex bg-white/40 p-1 rounded-2xl border border-white/60">
+                  <button 
+                    onClick={() => { setAuthMethod('email'); setError(''); setSuccessMsg(''); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                      authMethod === 'email' 
+                      ? 'bg-white text-[#001F3F] shadow-sm' 
+                      : 'text-[#001F3F]/50 hover:bg-white/20'
+                    }`}
+                  >
+                    <Mail size={16} />
+                    Email
+                  </button>
+                  <button 
+                    onClick={() => { setAuthMethod('whatsapp'); setError(''); setSuccessMsg(''); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                      authMethod === 'whatsapp' 
+                      ? 'bg-[#25D366] text-white shadow-sm' 
+                      : 'text-[#001F3F]/50 hover:bg-white/20'
+                    }`}
+                  >
+                    <MessageCircle size={16} />
+                    WhatsApp
+                  </button>
+                </div>
+              )}
+
+              {/* Status Banners */}
               {error && (
                 <div className="rounded-xl bg-red-500/15 border border-red-500/40 px-4 py-3 text-sm text-red-700 font-semibold">
                   ⚠️ {error}
@@ -110,133 +166,142 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   ✅ {successMsg}
                 </div>
               )}
-              {/* OAuth Buttons */}
-              <div className="space-y-3">
-                <PremiumButton
-                  variant="glass"
-                  size="large"
-                  className="w-full"
-                  onClick={() => handleOAuthLogin('google')}
-                  disabled={isLoading}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20">
-                    <path fill="#4285F4" d="M19.6 10.23c0-.82-.07-1.42-.23-2.05H10v3.72h5.5c-.11.87-.69 2.18-2 3.07l-.02.1 2.9 2.25.2.02c1.85-1.7 2.92-4.22 2.92-7.11z"/>
-                    <path fill="#34A853" d="M10 20c2.7 0 4.96-.89 6.62-2.42l-3.08-2.37c-.83.56-1.92.94-3.54.94-2.69 0-4.97-1.7-5.78-4.03l-.12.01-3.02 2.33-.04.11C2.62 17.78 6.03 20 10 20z"/>
-                    <path fill="#FBBC05" d="M4.22 11.12c-.22-.64-.34-1.32-.34-2.04 0-.72.12-1.4.33-2.04l-.01-.11-3.05-2.37-.1.05C.37 6.15 0 7.99 0 9.92c0 1.93.37 3.77 1.05 5.36l3.17-2.45z"/>
-                    <path fill="#EB4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.03 0 2.62 2.22 1.05 5.43l3.16 2.45C5.03 5.58 7.31 3.88 10 3.88z"/>
-                  </svg>
-                  <span>Continue with Google</span>
-                </PremiumButton>
 
-                <PremiumButton
-                  variant="glass"
-                  size="large"
-                  className="w-full"
-                  onClick={() => handleOAuthLogin('apple')}
-                  disabled={isLoading}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M15.5 9c0-2.8 2.3-4.2 2.4-4.3-1.3-1.9-3.3-2.2-4-2.2-1.7-.2-3.3 1-4.2 1-.9 0-2.2-1-3.6-1C4.4 2.6 2.5 3.9 1.5 5.8c-2 3.4-.5 8.5 1.4 11.3 1 1.4 2.1 2.9 3.6 2.8 1.4-.1 2-1 3.6-1s2.2.9 3.6.9c1.5 0 2.5-1.3 3.5-2.7.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.4-.9-2.5-3.7m-2.8-8.3c.8-1 1.3-2.4 1.2-3.7-1.2.1-2.6.8-3.4 1.8-.8.9-1.4 2.3-1.2 3.6 1.3.1 2.6-.6 3.4-1.7"/>
-                  </svg>
-                  <span>Continue with Apple</span>
-                </PremiumButton>
-              </div>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/30"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white/20 backdrop-blur-sm rounded-full text-[#001F3F]/60 font-medium">
-                    Or continue with email
-                  </span>
-                </div>
-              </div>
-
-              {/* Email/Password Form */}
-              <form onSubmit={handleEmailLogin} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-[#001F3F] mb-2 flex items-center gap-2">
-                    <Mail size={16} className="text-[#00F5FF]" />
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    autoComplete="email"
-                    className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-medium placeholder:text-[#001F3F]/40 focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)] transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-[#001F3F] mb-2 flex items-center gap-2">
-                    <Lock size={16} className="text-[#00F5FF]" />
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    autoComplete="current-password"
-                    className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-medium placeholder:text-[#001F3F]/40 focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)] transition-all"
-                  />
-                </div>
-
-                {isLogin && (
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-[#001F3F]/70">Remember me</span>
+              {/* Email Form */}
+              {authMethod === 'email' && !showOtpInput && (
+                <form onSubmit={handleSendMagicLink} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#001F3F] mb-2 flex items-center gap-2">
+                      <Mail size={16} className="text-[#00F5FF]" />
+                      Email Address
                     </label>
-                    <button type="button" className="text-[#00F5FF] font-semibold hover:underline">
-                      Forgot password?
-                    </button>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      autoComplete="email"
+                      className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-medium placeholder:text-[#001F3F]/40 focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)] transition-all"
+                    />
                   </div>
-                )}
 
-                <PremiumButton
-                  variant="primary"
-                  size="large"
-                  className="w-full"
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>{isLogin ? 'Signing in...' : 'Creating account...'}</span>
-                    </div>
-                  ) : (
-                    <>
-                      <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
-                      <ArrowRight size={20} />
-                    </>
-                  )}
-                </PremiumButton>
-              </form>
+                  <PremiumButton
+                    variant="primary"
+                    size="large"
+                    className="w-full"
+                    type="submit"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Sending Link...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span>Send Magic Link</span>
+                        <ArrowRight size={20} />
+                      </>
+                    )}
+                  </PremiumButton>
+                  <p className="text-center text-xs text-[#001F3F]/50 mt-2 font-medium">
+                    We'll email you a magic link for a password-free sign in.
+                  </p>
+                </form>
+              )}
 
-              {/* Toggle Login/Signup */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }}
-                  className="text-sm text-[#001F3F]/70"
-                >
-                  {isLogin ? "Don't have an account? " : 'Already have an account? '}
-                  <span className="text-[#00F5FF] font-bold hover:underline">
-                    {isLogin ? 'Sign up' : 'Sign in'}
-                  </span>
-                </button>
-              </div>
+              {/* WhatsApp Form */}
+              {authMethod === 'whatsapp' && !showOtpInput && (
+                <form onSubmit={handleSendWhatsAppCode} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#001F3F] mb-2 flex items-center gap-2">
+                      <Phone size={16} className="text-[#25D366]" />
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1234567890"
+                      required
+                      className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-medium placeholder:text-[#001F3F]/40 focus:border-[#25D366] focus:outline-none focus:shadow-[0_0_0_4px_rgba(37,211,102,0.15)] transition-all"
+                    />
+                  </div>
+
+                  <PremiumButton
+                    variant="primary"
+                    size="large"
+                    className="w-full !from-[#25D366] !to-[#128C7E] !shadow-[0_8px_20px_rgba(37,211,102,0.3)]"
+                    type="submit"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Sending Code...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span>Send WhatsApp Code</span>
+                        <ArrowRight size={20} />
+                      </>
+                    )}
+                  </PremiumButton>
+                </form>
+              )}
+
+              {/* OTP Verification Form */}
+              {showOtpInput && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4 animate-[fade-in_0.4s_ease-out]">
+                  <div>
+                    <label className="block text-sm font-bold text-[#001F3F] mb-2 flex items-center gap-2">
+                      <Lock size={16} className="text-[#25D366]" />
+                      Enter 6-digit Code
+                    </label>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="123456"
+                      required
+                      maxLength={6}
+                      className="w-full h-14 px-4 text-center tracking-[0.5em] text-2xl rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-black placeholder:text-[#001F3F]/20 focus:border-[#25D366] focus:outline-none focus:shadow-[0_0_0_4px_rgba(37,211,102,0.15)] transition-all"
+                    />
+                  </div>
+
+                  <PremiumButton
+                    variant="primary"
+                    size="large"
+                    className="w-full !from-[#25D366] !to-[#128C7E]"
+                    type="submit"
+                    disabled={isLoading || otp.length < 6}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Verifying...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span>Verify & Sign In</span>
+                        <ArrowRight size={20} />
+                      </>
+                    )}
+                  </PremiumButton>
+                  
+                  <button 
+                    type="button" 
+                    onClick={() => { setShowOtpInput(false); setOtp(''); setError(''); setSuccessMsg(''); }}
+                    className="w-full text-center text-sm font-bold text-[#001F3F]/60 mt-4 hover:text-[#001F3F]"
+                  >
+                    Change Phone Number
+                  </button>
+                </form>
+              )}
 
               {/* Features */}
-              <div className="pt-6 border-t border-white/20">
+              <div className="pt-6 border-t border-white/20 mt-6">
                 <div className="space-y-3">
                   {[
                     'Save up to 60% on every flight',
