@@ -106,7 +106,7 @@ export async function fetchBookingHotels(city: string, arrivalDate?: string, dep
     const depDate = departureDate || defaultDeparture;
 
     const hotelRes = await fetch(
-      `https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotels?dest_id=${destId}&search_type=${searchType}&arrival_date=${arrDate}&departure_date=${depDate}&adults=1`,
+      `https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotels?dest_id=${destId}&search_type=${searchType}&arrival_date=${arrDate}&departure_date=${depDate}&adults=1&room_qty=1&page_number=1`,
       { headers: headers('booking-com15.p.rapidapi.com') }
     );
     const hotelData = await hotelRes.json();
