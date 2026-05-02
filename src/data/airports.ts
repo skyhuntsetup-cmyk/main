@@ -12,9 +12,9 @@ export interface Airport {
 
 export const AIRPORTS: Airport[] = [
   // ── INDIA ──────────────────────────────────────────────────────────────
-  { code: 'DEL', name: 'Indira Gandhi International', city: 'New Delhi', country: 'India', flag: '🇮🇳' },
-  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj International', city: 'Mumbai', country: 'India', flag: '🇮🇳' },
-  { code: 'BLR', name: 'Kempegowda International', city: 'Bangalore', country: 'India', flag: '🇮🇳' },
+  { code: 'DEL', name: 'Indira Gandhi International', city: 'New Delhi', country: 'India', flag: '🇮🇳', entityId: '95673498' },
+  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj International', city: 'Mumbai', country: 'India', flag: '🇮🇳', entityId: '27539520' },
+  { code: 'BLR', name: 'Kempegowda International', city: 'Bangalore', country: 'India', flag: '🇮🇳', entityId: '95673351' },
   { code: 'MAA', name: 'Chennai International', city: 'Chennai', country: 'India', flag: '🇮🇳' },
   { code: 'HYD', name: 'Rajiv Gandhi International', city: 'Hyderabad', country: 'India', flag: '🇮🇳' },
   { code: 'CCU', name: 'Netaji Subhas Chandra Bose International', city: 'Kolkata', country: 'India', flag: '🇮🇳' },
@@ -56,7 +56,7 @@ export const AIRPORTS: Airport[] = [
   { code: 'AGR', name: 'Agra Airport', city: 'Agra', country: 'India', flag: '🇮🇳' },
 
   // ── MIDDLE EAST ────────────────────────────────────────────────────────
-  { code: 'DXB', name: 'Dubai International', city: 'Dubai', country: 'UAE', flag: '🇦🇪' },
+  { code: 'DXB', name: 'Dubai International', city: 'Dubai', country: 'UAE', flag: '🇦🇪', entityId: '27540839' },
   { code: 'AUH', name: 'Abu Dhabi International', city: 'Abu Dhabi', country: 'UAE', flag: '🇦🇪' },
   { code: 'SHJ', name: 'Sharjah International', city: 'Sharjah', country: 'UAE', flag: '🇦🇪' },
   { code: 'DOH', name: 'Hamad International', city: 'Doha', country: 'Qatar', flag: '🇶🇦' },
@@ -78,7 +78,7 @@ export const AIRPORTS: Airport[] = [
   { code: 'ISB', name: 'Islamabad International', city: 'Islamabad', country: 'Pakistan', flag: '🇵🇰' },
 
   // ── SOUTHEAST ASIA ─────────────────────────────────────────────────────
-  { code: 'SIN', name: 'Changi Airport', city: 'Singapore', country: 'Singapore', flag: '🇸🇬' },
+  { code: 'SIN', name: 'Changi Airport', city: 'Singapore', country: 'Singapore', flag: '🇸🇬', entityId: '27546111' },
   { code: 'BKK', name: 'Suvarnabhumi Airport', city: 'Bangkok', country: 'Thailand', flag: '🇹🇭' },
   { code: 'DMK', name: 'Don Mueang International', city: 'Bangkok', country: 'Thailand', flag: '🇹🇭' },
   { code: 'KUL', name: 'Kuala Lumpur International', city: 'Kuala Lumpur', country: 'Malaysia', flag: '🇲🇾' },
@@ -103,12 +103,12 @@ export const AIRPORTS: Airport[] = [
   { code: 'MFM', name: 'Macau International', city: 'Macau', country: 'Macau', flag: '🇲🇴' },
 
   // ── EUROPE ─────────────────────────────────────────────────────────────
-  { code: 'LHR', name: 'Heathrow Airport', city: 'London', country: 'UK', flag: '🇬🇧' },
+  { code: 'LHR', name: 'Heathrow Airport', city: 'London', country: 'UK', flag: '🇬🇧', entityId: '95565050' },
   { code: 'LGW', name: 'Gatwick Airport', city: 'London', country: 'UK', flag: '🇬🇧' },
   { code: 'STN', name: 'Stansted Airport', city: 'London', country: 'UK', flag: '🇬🇧' },
   { code: 'MAN', name: 'Manchester Airport', city: 'Manchester', country: 'UK', flag: '🇬🇧' },
   { code: 'BHX', name: 'Birmingham Airport', city: 'Birmingham', country: 'UK', flag: '🇬🇧' },
-  { code: 'CDG', name: 'Charles de Gaulle Airport', city: 'Paris', country: 'France', flag: '🇫🇷' },
+  { code: 'CDG', name: 'Charles de Gaulle Airport', city: 'Paris', country: 'France', flag: '🇫🇷', entityId: '95565053' },
   { code: 'ORY', name: 'Paris Orly Airport', city: 'Paris', country: 'France', flag: '🇫🇷' },
   { code: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands', flag: '🇳🇱' },
   { code: 'FRA', name: 'Frankfurt Airport', city: 'Frankfurt', country: 'Germany', flag: '🇩🇪' },
@@ -138,7 +138,7 @@ export const AIRPORTS: Airport[] = [
   { code: 'SVO', name: 'Sheremetyevo International', city: 'Moscow', country: 'Russia', flag: '🇷🇺' },
 
   // ── NORTH AMERICA ──────────────────────────────────────────────────────
-  { code: 'JFK', name: 'John F. Kennedy International', city: 'New York', country: 'USA', flag: '🇺🇸' },
+  { code: 'JFK', name: 'John F. Kennedy International', city: 'New York', country: 'USA', flag: '🇺🇸', entityId: '95565058' },
   { code: 'LGA', name: 'LaGuardia Airport', city: 'New York', country: 'USA', flag: '🇺🇸' },
   { code: 'EWR', name: 'Newark Liberty International', city: 'Newark', country: 'USA', flag: '🇺🇸' },
   { code: 'LAX', name: 'Los Angeles International', city: 'Los Angeles', country: 'USA', flag: '🇺🇸' },
@@ -181,7 +181,7 @@ export const AIRPORTS: Airport[] = [
   { code: 'CMN', name: 'Mohammed V International', city: 'Casablanca', country: 'Morocco', flag: '🇲🇦' },
 
   // ── OCEANIA ────────────────────────────────────────────────────────────
-  { code: 'SYD', name: 'Kingsford Smith Airport', city: 'Sydney', country: 'Australia', flag: '🇦🇺' },
+  { code: 'SYD', name: 'Kingsford Smith Airport', city: 'Sydney', country: 'Australia', flag: '🇦🇺', entityId: '27547097' },
   { code: 'MEL', name: 'Melbourne Airport', city: 'Melbourne', country: 'Australia', flag: '🇦🇺' },
   { code: 'BNE', name: 'Brisbane Airport', city: 'Brisbane', country: 'Australia', flag: '🇦🇺' },
   { code: 'PER', name: 'Perth Airport', city: 'Perth', country: 'Australia', flag: '🇦🇺' },
