@@ -73,9 +73,21 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
 
     const data = await res.json();
     return parseGoogleFlights(data, params);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[FlightAPI] searchFlights failed:', err);
-    return getMockFlights(params);
+    return [{
+      id: 'error-flight',
+      price: 0,
+      currency: 'USD',
+      airline: `API ERROR: ${err.message}`,
+      departureTime: params.departDate + 'T00:00:00',
+      arrivalTime: params.departDate + 'T00:00:00',
+      duration: '0h',
+      stops: 0,
+      stopDetails: 'Error',
+      from: params.fromCode,
+      to: params.toCode,
+    }];
   }
 }
 
@@ -118,9 +130,21 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         raw: item,
       } as FlightResult;
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[FlightAPI] parseGoogleFlights failed:', err);
-    return getMockFlights(params);
+    return [{
+      id: 'error-parse',
+      price: 0,
+      currency: 'USD',
+      airline: `PARSE ERROR: ${err.message}`,
+      departureTime: params.departDate + 'T00:00:00',
+      arrivalTime: params.departDate + 'T00:00:00',
+      duration: '0h',
+      stops: 0,
+      stopDetails: 'Error',
+      from: params.fromCode,
+      to: params.toCode,
+    }];
   }
 }
 

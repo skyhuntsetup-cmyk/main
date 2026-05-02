@@ -11,62 +11,7 @@ interface ResultsScreenProps {
   onBack?: () => void;
 }
 
-const mockFlights = [
-  {
-    id: 'mock-1',
-    airline: 'IndiGo',
-    departureTime: '08:30',
-    arrivalTime: '20:15',
-    duration: '23h',
-    stops: '2 stops (4h in Dubai)',
-    price: 41200,
-    savings: 3200,
-    rating: 4.2,
-    reviews: 2400,
-    delay: 0,
-    isMonitoring: true,
-  },
-  {
-    id: 'mock-2',
-    airline: 'Air India',
-    departureTime: '10:00',
-    arrivalTime: '22:30',
-    duration: '24h 30m',
-    stops: '1 stop (3h in Frankfurt)',
-    price: 43500,
-    savings: 1500,
-    rating: 4.0,
-    reviews: 1800,
-    delay: 12,
-    isMonitoring: false,
-  },
-  {
-    id: 'mock-3',
-    airline: 'Emirates',
-    departureTime: '14:30',
-    arrivalTime: '01:45+1',
-    duration: '23h 15m',
-    stops: '1 stop (2h in Dubai)',
-    price: 48900,
-    rating: 4.5,
-    reviews: 3200,
-    delay: 0,
-    isMonitoring: false,
-  },
-  {
-    id: 'mock-4',
-    airline: 'British Airways',
-    departureTime: '16:00',
-    arrivalTime: '02:30+1',
-    duration: '22h 30m',
-    stops: 'Non-stop',
-    price: 52000,
-    rating: 4.3,
-    reviews: 2100,
-    delay: 0,
-    isMonitoring: false,
-  },
-];
+// Removed mockFlights to ensure we never accidentally show fake data
 
 const sortOptions = ['Cheapest', 'Fastest', 'Best rated', 'Non-stop'];
 
@@ -95,7 +40,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
         delay: 0,
         isMonitoring: i === 0
       }))
-    : mockFlights;
+    : [];
 
   let displayFlights = [...rawDisplayFlights];
   if (sortBy === 'Cheapest') {
