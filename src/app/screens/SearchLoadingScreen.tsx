@@ -138,6 +138,8 @@ export function SearchLoadingScreen() {
         toCode: searchState.to.code,
         fromEntityId: searchState.from.entityId,
         toEntityId: searchState.to.entityId,
+        fromCity: searchState.from.city,
+        toCity: searchState.to.city,
         departDate: searchState.departDate,
         returnDate: searchState.tripType === 'round-trip' ? searchState.returnDate : undefined,
         adults: searchState.passengers,

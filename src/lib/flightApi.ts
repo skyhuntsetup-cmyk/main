@@ -32,6 +32,8 @@ export interface SearchParams {
   toCode: string;
   fromEntityId?: string;
   toEntityId?: string;
+  fromCity?: string;
+  toCity?: string;
   departDate: string;          // YYYY-MM-DD
   returnDate?: string;         // YYYY-MM-DD (for round trips)
   adults?: number;
@@ -67,12 +69,12 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
     // Use provided entity IDs or fetch them sequentially to avoid rate limits
     let fromEntity: string | null | undefined = params.fromEntityId;
     if (!fromEntity) {
-      fromEntity = await getSkyId(params.fromCode);
+      fromEntity = await getSkyId(params.fromCity || params.fromCode);
     }
     
     let toEntity: string | null | undefined = params.toEntityId;
     if (!toEntity) {
-      toEntity = await getSkyId(params.toCode);
+      toEntity = await getSkyId(params.toCity || params.toCode);
     }
 
     if (!fromEntity || !toEntity) {
