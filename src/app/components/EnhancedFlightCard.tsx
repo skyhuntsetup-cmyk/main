@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Star, Clock, MapPin } from 'lucide-react';
 import { LiquidGlassCard } from './LiquidGlassCard';
 import { PremiumButton } from './PremiumButton';
@@ -16,6 +17,8 @@ interface EnhancedFlightCardProps {
   delay?: number;
   isMonitoring?: boolean;
   onClick?: () => void;
+  onBook?: () => void;
+  onDetails?: () => void;
 }
 
 export function EnhancedFlightCard({
@@ -31,7 +34,11 @@ export function EnhancedFlightCard({
   delay = 0,
   isMonitoring = true,
   onClick,
+  onBook,
+  onDetails,
 }: EnhancedFlightCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <LiquidGlassCard hoverable pulseIndicator={isMonitoring} onClick={onClick}>
       <div className="space-y-4">
@@ -83,10 +90,44 @@ export function EnhancedFlightCard({
         <div className="flex items-end justify-between pt-1 border-t border-white/30">
           <PulsePrice price={price} savings={savings} isMonitoring={isMonitoring} />
           <div className="flex flex-col gap-2">
-            <PremiumButton variant="glass" size="small">Details</PremiumButton>
-            <PremiumButton variant="primary" size="small" onClick={onClick}>Book Now</PremiumButton>
+            <PremiumButton 
+              variant="glass" 
+              size="small" 
+              onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); onDetails?.(); }}
+            >
+              {isExpanded ? 'Hide Details' : 'Details'}
+            </PremiumButton>
+            <PremiumButton 
+              variant="primary" 
+              size="small" 
+              onClick={(e) => { e.stopPropagation(); onBook?.(); }}
+            >
+              Book Now
+            </PremiumButton>
           </div>
         </div>
+
+        {/* Expanded Details Section */}
+        {isExpanded && (
+          <div className="mt-4 pt-4 border-t border-[#001F3F]/10 animate-fade-in space-y-3">
+            <div className="flex justify-between text-sm text-[#001F3F]/80">
+              <span className="font-semibold">Airline</span>
+              <span>{airline}</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#001F3F]/80">
+              <span className="font-semibold">Flight Duration</span>
+              <span>{duration}</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#001F3F]/80">
+              <span className="font-semibold">Layovers</span>
+              <span>{stops}</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#001F3F]/80">
+              <span className="font-semibold">Baggage Allowance</span>
+              <span>1 Cabin, 1 Checked (15kg)</span>
+            </div>
+          </div>
+        )}
       </div>
     </LiquidGlassCard>
   );

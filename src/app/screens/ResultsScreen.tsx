@@ -13,6 +13,7 @@ interface ResultsScreenProps {
 
 const mockFlights = [
   {
+    id: 'mock-1',
     airline: 'IndiGo',
     departureTime: '08:30',
     arrivalTime: '20:15',
@@ -26,6 +27,7 @@ const mockFlights = [
     isMonitoring: true,
   },
   {
+    id: 'mock-2',
     airline: 'Air India',
     departureTime: '10:00',
     arrivalTime: '22:30',
@@ -39,6 +41,7 @@ const mockFlights = [
     isMonitoring: false,
   },
   {
+    id: 'mock-3',
     airline: 'Emirates',
     departureTime: '14:30',
     arrivalTime: '01:45+1',
@@ -51,6 +54,7 @@ const mockFlights = [
     isMonitoring: false,
   },
   {
+    id: 'mock-4',
     airline: 'British Airways',
     departureTime: '16:00',
     arrivalTime: '02:30+1',
@@ -200,7 +204,14 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
       {/* Flight list */}
       <div className="px-4 pt-2 pb-8 space-y-3">
         {displayFlights.slice(0, visibleCount).map((flight) => (
-          <EnhancedFlightCard key={flight.id} {...flight} />
+          <EnhancedFlightCard 
+            key={flight.id} 
+            {...flight} 
+            onBook={() => {
+              // Simulated booking redirect
+              alert(`Redirecting you to complete your booking with ${flight.airline}...`);
+            }}
+          />
         ))}
 
         {visibleCount < displayFlights.length && (
