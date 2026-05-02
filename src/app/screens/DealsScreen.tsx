@@ -3,22 +3,9 @@ import { Flame, TrendingDown, Clock, Zap, Sparkles, RefreshCw, Brain } from 'luc
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 
-const flashSales = [
-  { from: 'Delhi', to: 'Bangkok', flag: '🇹🇭', price: 6200, original: 12500, discount: 50, departure: 'Tomorrow 14:30', airlines: ['Thai Airways', 'Air Asia'] },
-  { from: 'Mumbai', to: 'Phuket', flag: '🏝️', price: 5800, original: 11600, discount: 50, departure: 'Apr 25 10:00', airlines: ['IndiGo', 'Air India'] },
-];
-
-const priceDrops = [
-  { route: 'Delhi → London', flag: '🇬🇧', drop: 22, price: 43500 },
-  { route: 'Bangalore → Singapore', flag: '🇸🇬', drop: 18, price: 20500 },
-  { route: 'Mumbai → Dubai', flag: '🇦🇪', drop: 15, price: 8200 },
-];
-
-const aiRecs = [
-  { label: 'US Routes', timing: 'Book NOW', color: '#00A854', bg: 'bg-[#00A854]/10 border-[#00A854]/20', detail: 'Book by Apr 24 · Save ~8% · 92% confidence' },
-  { label: 'EU Routes', timing: 'Book Soon', color: '#F39C12', bg: 'bg-[#F39C12]/10 border-[#F39C12]/20', detail: 'Moderate savings in next 14 days' },
-  { label: 'Asian Routes', timing: 'Wait', color: '#E74C3C', bg: 'bg-[#E74C3C]/10 border-[#E74C3C]/20', detail: 'Prices expected to drop further in May' },
-];
+const flashSales: any[] = [];
+const priceDrops: any[] = [];
+const aiRecs: any[] = [];
 
 export function DealsScreen() {
   const [countdown, setCountdown] = useState({ h: 6, m: 45, s: 0 });
@@ -71,7 +58,7 @@ export function DealsScreen() {
             <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Flash Sales</h2>
           </div>
           <div className="space-y-3">
-            {flashSales.map((deal, i) => (
+            {flashSales.length > 0 ? flashSales.map((deal, i) => (
               <LiquidGlassCard key={i} className="border-[#FF6B6B]/30">
                 <div className="flex items-start gap-3 mb-3">
                   <span className="text-4xl">{deal.flag}</span>
@@ -112,7 +99,11 @@ export function DealsScreen() {
                   </PremiumButton>
                 </div>
               </LiquidGlassCard>
-            ))}
+            )) : (
+              <div className="w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
+                <span className="text-xs font-bold text-[#001F3F]/50">No flash sales active right now.</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -123,7 +114,7 @@ export function DealsScreen() {
             <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Top Price Drops &gt;15%</h2>
           </div>
           <div className="space-y-2.5">
-            {priceDrops.map((drop, i) => (
+            {priceDrops.length > 0 ? priceDrops.map((drop, i) => (
               <LiquidGlassCard key={i} hoverable size="small">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl flex-shrink-0">{drop.flag}</span>
@@ -137,7 +128,11 @@ export function DealsScreen() {
                   </div>
                 </div>
               </LiquidGlassCard>
-            ))}
+            )) : (
+              <div className="w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
+                <span className="text-xs font-bold text-[#001F3F]/50">No recent price drops found.</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -153,7 +148,7 @@ export function DealsScreen() {
             </div>
           </div>
           <div className="space-y-2.5">
-            {aiRecs.map((rec) => (
+            {aiRecs.length > 0 ? aiRecs.map((rec) => (
               <div key={rec.label} className={`flex items-start gap-3 p-3 rounded-xl border ${rec.bg}`}>
                 <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: rec.color }} />
                 <div>
@@ -164,7 +159,11 @@ export function DealsScreen() {
                   <div className="text-xs text-[#001F3F]/50 font-medium mt-0.5">{rec.detail}</div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
+                <span className="text-xs font-bold text-[#001F3F]/50">Gathering intelligence...</span>
+              </div>
+            )}
           </div>
         </LiquidGlassCard>
 

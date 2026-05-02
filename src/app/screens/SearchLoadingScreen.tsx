@@ -158,8 +158,8 @@ export function SearchLoadingScreen() {
         // Save the best price if found
         if (flights && flights.length > 0) {
           addSearch({
-            from: searchState.from.city,
-            to: searchState.to.city,
+            from_city: searchState.from.city,
+            to_city: searchState.to.city,
             code: `${searchState.from.code}→${searchState.to.code}`,
             date: new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             flag: destination.flag || '✈️',
