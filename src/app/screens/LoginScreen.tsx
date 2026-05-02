@@ -8,10 +8,10 @@ interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
-type AuthMethod = 'email' | 'whatsapp';
+type AuthMethod = 'magic-link' | 'whatsapp';
 
 export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('magic-link');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -19,6 +19,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
 
   const handleSendMagicLink = async (e: { preventDefault(): void }) => {
     e.preventDefault();
@@ -30,15 +31,23 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({ 
-        email,
+        email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       if (error) throw error;
-      setSuccessMsg('Magic link sent! Check your inbox to sign in.');
+      setSuccessMsg('Magic link sent!');
+      setLinkSent(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send magic link');
+      console.error('Magic link error details:', err);
+      let msg = err.message || 'Failed to send magic link';
+      
+      if (msg.includes('Unexpected end of JSON input') || msg.includes('Failed to fetch')) {
+        msg = 'Connection error: Could not reach Supabase. Please check your internet or if the project is paused.';
+      }
+      
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -61,8 +70,33 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       setSuccessMsg('WhatsApp code sent!');
       setShowOtpInput(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send WhatsApp code');
+      console.error('WhatsApp error details:', err);
+      let msg = err.message || 'Failed to send WhatsApp code';
+      if (msg.includes('Unexpected end of JSON input') || msg.includes('Failed to fetch')) {
+        msg = 'Connection error: Could not reach Supabase. Please check your internet.';
+      }
+      setError(msg);
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (!supabase) {
+      setError('Supabase is not configured.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message || 'Failed to start Google login');
       setIsLoading(false);
     }
   };
@@ -131,15 +165,15 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               {!showOtpInput && (
                 <div className="flex bg-white/40 p-1 rounded-2xl border border-white/60">
                   <button 
-                    onClick={() => { setAuthMethod('email'); setError(''); setSuccessMsg(''); }}
+                    onClick={() => { setAuthMethod('magic-link'); setError(''); setSuccessMsg(''); }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                      authMethod === 'email' 
+                      authMethod === 'magic-link' 
                       ? 'bg-white text-[#001F3F] shadow-sm' 
                       : 'text-[#001F3F]/50 hover:bg-white/20'
                     }`}
                   >
-                    <Mail size={16} />
-                    Email
+                    <Sparkles size={16} className={authMethod === 'magic-link' ? 'text-[#00F5FF]' : ''} />
+                    Magic Link
                   </button>
                   <button 
                     onClick={() => { setAuthMethod('whatsapp'); setError(''); setSuccessMsg(''); }}
@@ -167,8 +201,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 </div>
               )}
 
-              {/* Email Form */}
-              {authMethod === 'email' && !showOtpInput && (
+              {/* Magic Link Form */}
+              {authMethod === 'magic-link' && !showOtpInput && !linkSent && (
                 <form onSubmit={handleSendMagicLink} className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-[#001F3F] mb-2 flex items-center gap-2">
@@ -191,7 +225,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     size="large"
                     className="w-full"
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || !email.includes('@')}
                   >
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
@@ -209,6 +243,30 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     We'll email you a magic link for a password-free sign in.
                   </p>
                 </form>
+              )}
+
+              {/* Magic Link Sent Confirmation */}
+              {authMethod === 'magic-link' && linkSent && (
+                <div className="text-center space-y-6 py-4 animate-[fade-in_0.4s_ease-out]">
+                  <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20">
+                    <Mail className="text-green-600" size={32} />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-[#001F3F]">Check your email</h3>
+                    <p className="text-sm text-[#001F3F]/60">
+                      We've sent a magic link to <span className="font-bold text-[#001F3F]">{email}</span>.
+                      Click the link in the email to sign in instantly.
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <button 
+                      onClick={() => setLinkSent(false)}
+                      className="text-sm font-bold text-[#0047AB] hover:underline"
+                    >
+                      Didn't receive it? Try again
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* WhatsApp Form */}
@@ -298,6 +356,35 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     Change Phone Number
                   </button>
                 </form>
+              )}
+
+              {/* Social Login Divider */}
+              {!showOtpInput && (
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/20"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white/10 backdrop-blur-md px-2 text-[#001F3F]/40 font-black">Or continue with</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Social Login Buttons */}
+              {!showOtpInput && (
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                  className="w-full h-12 rounded-xl bg-white/60 backdrop-blur-xl border border-white/80 text-[#001F3F] font-bold shadow-sm hover:bg-white/80 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  <svg width="18" height="18" viewBox="0 0 20 20">
+                    <path fill="#4285F4" d="M19.6 10.23c0-.82-.07-1.42-.23-2.05H10v3.72h5.5c-.11.87-.69 2.18-2 3.07l-.02.1 2.9 2.25.2.02c1.85-1.7 2.92-4.22 2.92-7.11z"/>
+                    <path fill="#34A853" d="M10 20c2.7 0 4.96-.89 6.62-2.42l-3.08-2.37c-.83.56-1.92.94-3.54.94-2.69 0-4.97-1.7-5.78-4.03l-.12.01-3.02 2.33-.04.11C2.62 17.78 6.03 20 10 20z"/>
+                    <path fill="#FBBC05" d="M4.22 11.12c-.22-.64-.34-1.32-.34-2.04 0-.72.12-1.4.33-2.04l-.01-.11-3.05-2.37-.1.05C.37 6.15 0 7.99 0 9.92c0 1.93.37 3.77 1.05 5.36l3.17-2.45z"/>
+                    <path fill="#EB4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.03 0 2.62 2.22 1.05 5.43l3.16 2.45C5.03 5.58 7.31 3.88 10 3.88z"/>
+                  </svg>
+                  <span>Google</span>
+                </button>
               )}
 
               {/* Features */}

@@ -83,7 +83,8 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
     const res = await fetch(`${BASE_URL}/searchFlights?${queryParams}`, { headers });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     return parseGoogleFlights(data, params);
   } catch (err: any) {
     console.error('[FlightAPI] searchFlights failed:', err);

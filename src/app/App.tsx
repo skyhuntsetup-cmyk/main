@@ -66,9 +66,11 @@ function AppContent() {
     };
 
     // Covers OAuth redirect: tokens land in URL hash, Supabase picks them up here.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) handleSignIn(session);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (session) handleSignIn(session);
+      })
+      .catch(err => console.error('Global session check failed:', err));
 
     // Covers all future auth events (email login, token refresh, logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {

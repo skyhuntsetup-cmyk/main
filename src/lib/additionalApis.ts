@@ -81,6 +81,15 @@ function toISO2(countryName: string): string {
   return COUNTRY_TO_ISO2[countryName] || countryName.substring(0, 2).toUpperCase();
 }
 
+async function safeJson(res: Response) {
+  if (!res.ok) {
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+
 // ─── Booking.com Hotels ──────────────────────────────────────────────────────
 
 export async function fetchBookingHotels(city: string, arrivalDate?: string, departureDate?: string) {
@@ -90,7 +99,7 @@ export async function fetchBookingHotels(city: string, arrivalDate?: string, dep
       `https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination?query=${encodeURIComponent(city)}`,
       { headers: headers('booking-com15.p.rapidapi.com') }
     );
-    const destData = await destRes.json();
+    const destData = await safeJson(destRes);
     const results: any[] = destData?.data || [];
     const cityResult = results.find((r: any) => r.dest_type === 'city') || results[0];
     const destId = cityResult?.dest_id;
@@ -109,7 +118,7 @@ export async function fetchBookingHotels(city: string, arrivalDate?: string, dep
       `https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotels?dest_id=${destId}&search_type=${searchType}&arrival_date=${arrDate}&departure_date=${depDate}&adults=1&room_qty=1&page_number=1`,
       { headers: headers('booking-com15.p.rapidapi.com') }
     );
-    const hotelData = await hotelRes.json();
+    const hotelData = await safeJson(hotelRes);
     return hotelData?.data?.hotels?.slice(0, 3) || [];
   } catch (err) {
     console.error('[Booking] fetchBookingHotels error:', err);
@@ -126,7 +135,7 @@ export async function fetchAirbnbProperties(city: string, checkin?: string, chec
       `https://airbnb19.p.rapidapi.com/api/v1/searchDestination?query=${encodeURIComponent(city)}`,
       { headers: headers('airbnb19.p.rapidapi.com') }
     );
-    const destData = await destRes.json();
+    const destData = await safeJson(destRes);
     const placeId = destData?.data?.[0]?.id;
     if (!placeId) return null;
 
@@ -139,7 +148,7 @@ export async function fetchAirbnbProperties(city: string, checkin?: string, chec
       `https://airbnb19.p.rapidapi.com/api/v2/searchPropertyByPlaceId?placeId=${placeId}&adults=1&guestFavorite=false&ib=false&currency=USD${dateParams}`,
       { headers: headers('airbnb19.p.rapidapi.com') }
     );
-    const propData = await propRes.json();
+    const propData = await safeJson(propRes);
     return propData?.data?.slice(0, 3) || [];
   } catch (err) {
     console.error('[Airbnb] fetchAirbnbProperties error:', err);
@@ -160,7 +169,7 @@ export async function fetchVisaDetails(fromCountry?: string, toCountry?: string,
       `https://visa-requirement.p.rapidapi.com/v2/visa/check/history/${from}/${to}/${date}`,
       { headers: headers('visa-requirement.p.rapidapi.com') }
     );
-    const data = await res.json();
+    const data = await safeJson(res);
     return data?.data?.current_rule || null;
   } catch (err) {
     console.error('[Visa] fetchVisaDetails error:', err);
@@ -179,7 +188,7 @@ export async function fetchEmbassyDetails(source: string, destination: string) {
       `https://travel-info-api.p.rapidapi.com/find-embassy?source=${src}&destination=${dest}`,
       { headers: headers('travel-info-api.p.rapidapi.com') }
     );
-    const data = await res.json();
+    const data = await safeJson(res);
     if (data?.error || !data?.data?.[0]) return null;
     return data.data[0];
   } catch (err) {
