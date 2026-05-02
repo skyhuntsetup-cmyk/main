@@ -51,6 +51,7 @@ function AppContent() {
         homeAirport: '',
         dateOfBirth: '',
         preferences: [],
+        accountTier: 'free',
       });
 
       // Let AuthCallbackScreen handle navigation during OAuth redirect;

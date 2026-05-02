@@ -48,6 +48,7 @@ export function AuthCallbackScreen() {
         homeAirport: '',
         dateOfBirth: '',
         preferences: [],
+        accountTier: 'free'
       });
       setStatus('✅ Signed in! Redirecting...');
       setTimeout(() => {

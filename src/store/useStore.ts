@@ -9,6 +9,7 @@ interface UserProfile {
   homeAirport: string;
   dateOfBirth: string;
   preferences: string[];
+  accountTier: 'free' | 'premium' | 'pro';
 }
 
 export interface RecentSearch {
@@ -45,6 +46,7 @@ interface AppState {
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
   setCurrency: (currency: string) => void;
+  setAccountTier: (tier: 'free' | 'premium' | 'pro') => void;
   
   addSearch: (search: Omit<RecentSearch, 'timestamp' | 'id'>) => void;
   addAlert: (alert: Omit<Alert, 'id' | 'dateAdded'>) => void;
@@ -75,6 +77,10 @@ export const useStore = create<AppState>()(
       })),
       
       setCurrency: (currency) => set({ currency }),
+
+      setAccountTier: (accountTier) => set((state) => ({
+        user: state.user ? { ...state.user, accountTier } : null
+      })),
 
       fetchUserData: async () => {
         if (!supabase) return;

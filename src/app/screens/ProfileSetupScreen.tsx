@@ -34,10 +34,11 @@ export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
       login({
         fullName: formData.fullName,
         phone: formData.phone,
-        email: user?.email || 'user@example.com',
+        email: user?.email || '',
         homeAirport: formData.homeAirport,
         dateOfBirth: formData.dateOfBirth,
-        preferences: []
+        preferences: [],
+        accountTier: 'free'
       });
       onComplete();
     } catch (err: any) {
