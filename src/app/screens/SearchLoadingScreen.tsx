@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchFlights, FlightResult } from '../../lib/flightApi';
-import { Plane, Hotel, MapPin, Thermometer, Camera, Utensils, Clock } from 'lucide-react';
+import { fetchBookingHotels, fetchAirbnbProperties, fetchVisaDetails, fetchEmbassyDetails } from '../../lib/additionalApis';
+import { Plane, Hotel, MapPin, Thermometer, Camera, Utensils, Clock, Home, FileText, Landmark } from 'lucide-react';
 import type { SearchState } from './SearchScreen';
 
 // Destination tips database
@@ -121,7 +122,12 @@ export function SearchLoadingScreen() {
   const [phase, setPhase]         = useState<'scanning' | 'hotels' | 'ready'>('scanning');
   const fetchedFlightsRef         = useRef<FlightResult[] | null>(null);
 
-  const destination = searchState?.to || { code: 'LHR', city: 'London', flag: '🇬🇧' } as any;
+  const [liveHotels, setLiveHotels] = useState<any[] | null>(null);
+  const [liveAirbnbs, setLiveAirbnbs] = useState<any[] | null>(null);
+  const [liveVisa, setLiveVisa] = useState<any>(null);
+  const [liveEmbassy, setLiveEmbassy] = useState<any>(null);
+
+  const destination = searchState?.to || { code: 'LHR', city: 'London', flag: '🇬🇧', country: 'UK' } as any;
   const tips        = getTips(destination.code);
   const DURATION    = 18000; // 18 seconds total
 
@@ -150,6 +156,18 @@ export function SearchLoadingScreen() {
       }).catch(err => console.error('Failed to fetch flights:', err));
     }
   }, [searchState]);
+
+  // Fetch destination travel data
+  useEffect(() => {
+    if (destination.city) {
+      fetchBookingHotels(destination.city).then(setLiveHotels);
+      fetchAirbnbProperties(destination.city).then(setLiveAirbnbs);
+    }
+    const sourceCountry = searchState?.from?.country || 'India';
+    const destCountry = destination.country || 'USA';
+    fetchVisaDetails().then(setLiveVisa);
+    fetchEmbassyDetails(sourceCountry, destCountry).then(setLiveEmbassy);
+  }, [destination.city, destination.country, searchState?.from?.country]);
 
   // Redirect to results after duration
   useEffect(() => {
@@ -316,31 +334,89 @@ export function SearchLoadingScreen() {
           </div>
         </div>
 
+        {/* Visa & Embassy details */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-1 text-[#00F5FF]">
+              <FileText size={14} />
+              <div className="text-xs font-black uppercase tracking-wider">Visa Required</div>
+            </div>
+            <div className="text-sm font-bold text-white truncate">
+              {liveVisa ? liveVisa.display_label : 'Checking requirements...'}
+            </div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-1 text-[#00F5FF]">
+              <Landmark size={14} />
+              <div className="text-xs font-black uppercase tracking-wider">Local Embassy</div>
+            </div>
+            <div className="text-sm font-bold text-white truncate">
+              {liveEmbassy ? liveEmbassy.phone?.split('local')[0] || 'Phone available' : 'Locating nearest...'}
+            </div>
+          </div>
+        </div>
+
         {/* Hotel recommendations */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Hotel size={14} className="text-[#00F5FF]" />
-            <span className="text-xs font-black text-[#00F5FF] uppercase tracking-widest">Hotel Recommendations</span>
-            <span className="text-xs text-white/40 ml-auto">via Booking.com</span>
+            <span className="text-xs font-black text-[#00F5FF] uppercase tracking-widest">Booking.com Hotels</span>
+            <span className="text-xs text-white/40 ml-auto">Live Data</span>
           </div>
           <div className="space-y-2">
-            {tips.hotels.map((hotel) => (
+            {liveHotels ? liveHotels.map((hotel: any) => (
+              <div
+                key={hotel.hotel_id}
+                className="bg-white/10 backdrop-blur-xl rounded-xl px-4 py-3 flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-black">{hotel.property?.reviewScore || '8.5'}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-bold text-sm truncate">{hotel.property?.name}</div>
+                  <div className="text-white/50 text-xs truncate">★ {hotel.property?.reviewScoreWord || 'Excellent'}</div>
+                </div>
+              </div>
+            )) : tips.hotels.map((hotel) => (
               <div
                 key={hotel.name}
-                className="bg-white/10 backdrop-blur-xl rounded-xl px-4 py-3 flex items-center gap-3"
+                className="bg-white/10 backdrop-blur-xl rounded-xl px-4 py-3 flex items-center gap-3 opacity-50"
               >
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs font-black">{hotel.rating}★</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white font-bold text-sm truncate">{hotel.name}</div>
-                  <div className="text-white/50 text-xs">{hotel.type}</div>
-                </div>
-                <div className="text-[#00F5FF] font-black text-xs text-right">
-                  {hotel.price}
+                  <div className="text-white/50 text-xs truncate">{hotel.type}</div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Airbnb recommendations */}
+        <div>
+          <div className="flex items-center gap-2 mb-3 mt-4">
+            <Home size={14} className="text-[#ff5a5f]" />
+            <span className="text-xs font-black text-[#ff5a5f] uppercase tracking-widest">Airbnb Stays</span>
+            <span className="text-xs text-white/40 ml-auto">Live Data</span>
+          </div>
+          <div className="space-y-2">
+            {liveAirbnbs ? liveAirbnbs.map((stay: any, i: number) => (
+              <div
+                key={i}
+                className="bg-white/10 backdrop-blur-xl rounded-xl px-4 py-3 flex items-center gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-bold text-sm truncate">{stay.name || 'Entire Home'}</div>
+                  <div className="text-white/50 text-xs truncate">Superhost • {stay.rating || '4.9'}★</div>
+                </div>
+              </div>
+            )) : (
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl px-4 py-3 flex items-center gap-3 opacity-50">
+                <div className="text-white/50 text-xs">Scanning available Airbnbs...</div>
+              </div>
+            )}
           </div>
         </div>
 
