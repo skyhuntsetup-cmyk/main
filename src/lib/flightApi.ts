@@ -1,9 +1,6 @@
-// Flight Search Service — Sky Scrapper API (RapidAPI)
-// Docs: https://rapidapi.com/apiheya/api/sky-scrapper
-
 const RAPIDAPI_KEY = import.meta.env.VITE_RAPIDAPI_KEY || '';
-const RAPIDAPI_HOST = 'sky-scrapper.p.rapidapi.com';
-const BASE_URL = 'https://sky-scrapper.p.rapidapi.com/api';
+const RAPIDAPI_HOST = 'google-flights2.p.rapidapi.com';
+const BASE_URL = 'https://google-flights2.p.rapidapi.com/api/v1';
 
 const headers = {
   'x-rapidapi-key': RAPIDAPI_KEY,
@@ -41,24 +38,7 @@ export interface SearchParams {
   currency?: string;
 }
 
-// Step 1: Get Skyscanner entityId for an IATA code
-export async function getSkyId(iataCode: string): Promise<string | null> {
-  try {
-    const res = await fetch(
-      `${BASE_URL}/v1/flights/searchAirport?query=${iataCode}&locale=en-US`,
-      { headers }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const airport = data?.data?.[0];
-    return airport?.entityId || null;
-  } catch (err) {
-    console.error('[FlightAPI] getSkyId failed:', err);
-    return null;
-  }
-}
-
-// Step 2: Search flights
+// Step 1: Search flights using Google Flights API
 export async function searchFlights(params: SearchParams): Promise<FlightResult[]> {
   if (!RAPIDAPI_KEY) {
     console.warn('[FlightAPI] VITE_RAPIDAPI_KEY not set — using mock data');
@@ -66,104 +46,82 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
   }
 
   try {
-    // Use provided entity IDs or fetch them sequentially to avoid rate limits
-    let fromEntity: string | null | undefined = params.fromEntityId;
-    let didFetchFrom = false;
-    if (!fromEntity) {
-      fromEntity = await getSkyId(params.fromCity || params.fromCode);
-      didFetchFrom = true;
-    }
-    
-    let toEntity: string | null | undefined = params.toEntityId;
-    if (!toEntity) {
-      if (didFetchFrom) {
-        // Sleep for 1.2s to bypass RapidAPI 1 req/sec strict limit
-        await new Promise(resolve => setTimeout(resolve, 1200));
-      }
-      toEntity = await getSkyId(params.toCity || params.toCode);
-    }
-
-    if (!fromEntity || !toEntity) {
-      console.warn('[FlightAPI] Could not resolve airport entity IDs');
-      return getMockFlights(params);
-    }
-
     const cabinMap: Record<string, string> = {
-      economy: 'economy',
-      premium_economy: 'premiumeconomy',
-      business: 'business',
-      first: 'first',
+      economy: 'ECONOMY',
+      premium_economy: 'PREMIUM_ECONOMY',
+      business: 'BUSINESS',
+      first: 'FIRST',
     };
 
     const queryParams = new URLSearchParams({
-      originSkyId: params.fromCode,
-      destinationSkyId: params.toCode,
-      originEntityId: fromEntity,
-      destinationEntityId: toEntity,
-      date: params.departDate,
+      departure_id: params.fromCode,
+      arrival_id: params.toCode,
+      outbound_date: params.departDate,
       adults: String(params.adults || 1),
-      cabinClass: cabinMap[params.cabinClass || 'economy'],
+      travel_class: cabinMap[params.cabinClass || 'economy'],
       currency: params.currency || 'USD',
-      market: 'IN',
-      countryCode: 'IN',
-      locale: 'en-US',
+      language_code: 'en-US',
+      country_code: 'US',
+      search_type: 'best'
     });
 
     if (params.returnDate) {
-      queryParams.append('returnDate', params.returnDate);
+      queryParams.append('return_date', params.returnDate);
     }
 
-    const endpoint = params.returnDate
-      ? `${BASE_URL}/v2/flights/searchFlights`
-      : `${BASE_URL}/v2/flights/searchFlights`;
-
-    const res = await fetch(`${endpoint}?${queryParams}`, { headers });
+    const res = await fetch(`${BASE_URL}/searchFlights?${queryParams}`, { headers });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
-    return parseFlightResults(data, params);
+    return parseGoogleFlights(data, params);
   } catch (err) {
     console.error('[FlightAPI] searchFlights failed:', err);
     return getMockFlights(params);
   }
 }
 
-// Parse Sky Scrapper response into our FlightResult format
-function parseFlightResults(data: any, params: SearchParams): FlightResult[] {
+function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
   try {
-    const itineraries = data?.data?.itineraries || [];
-    return itineraries.slice(0, 20).map((item: any, idx: number) => {
-      const leg = item.legs?.[0];
-      const segment = leg?.segments?.[0];
-      const price = item.price?.raw || item.price?.formatted?.replace(/[^0-9.]/g, '') || 0;
+    const itineraries = data?.data?.itineraries || {};
+    const allFlights = [...(itineraries.topFlights || []), ...(itineraries.otherFlights || [])];
+    
+    if (allFlights.length === 0) return [];
+
+    return allFlights.map((item: any, idx: number) => {
+      // time format: "2026-5-27 07:20"
+      const formatTime = (timeStr: string) => {
+        if (!timeStr) return '';
+        const parts = timeStr.split(' ');
+        if (parts.length !== 2) return timeStr;
+        const [datePart, timePart] = parts;
+        const formattedDate = datePart.split('-').map(p => p.padStart(2, '0')).join('-');
+        return `${formattedDate}T${timePart}:00`;
+      };
+
+      const firstFlight = item.flights?.[0];
+      const lastFlight = item.flights?.[item.flights.length - 1];
+      const mainAirline = firstFlight?.airline || 'Unknown Airline';
 
       return {
-        id: item.id || `flight-${idx}`,
-        price: typeof price === 'string' ? parseFloat(price) : price,
+        id: item.booking_token || `flight-${idx}`,
+        price: item.price || 0,
         currency: params.currency || 'USD',
-        airline: segment?.operatingCarrier?.name || leg?.carriers?.marketing?.[0]?.name || 'Unknown Airline',
-        airlineLogo: leg?.carriers?.marketing?.[0]?.logoUrl,
-        departureTime: leg?.departure || '',
-        arrivalTime: leg?.arrival || '',
-        duration: formatDuration(leg?.durationInMinutes),
-        stops: leg?.stopCount !== undefined ? leg.stopCount : 0,
-        stopDetails: leg?.stopCount > 0 ? `${leg.stopCount} stop${leg.stopCount > 1 ? 's' : ''}` : 'Direct',
+        airline: mainAirline,
+        airlineLogo: item.airline_logo || firstFlight?.airline_logo,
+        departureTime: formatTime(firstFlight?.departure_airport?.time),
+        arrivalTime: formatTime(lastFlight?.arrival_airport?.time),
+        duration: item.duration?.text || '',
+        stops: item.stops || 0,
+        stopDetails: item.stops > 0 ? `${item.stops} stop${item.stops > 1 ? 's' : ''}` : 'Direct',
         from: params.fromCode,
         to: params.toCode,
         raw: item,
       } as FlightResult;
     });
   } catch (err) {
-    console.error('[FlightAPI] parseFlightResults failed:', err);
+    console.error('[FlightAPI] parseGoogleFlights failed:', err);
     return getMockFlights(params);
   }
-}
-
-function formatDuration(minutes: number): string {
-  if (!minutes) return 'N/A';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${m}m`;
 }
 
 // Mock data for when API key is not configured
@@ -196,32 +154,6 @@ export function getMockFlights(params: SearchParams): FlightResult[] {
       to: params.toCode,
     },
     {
-      id: 'mock-3',
-      price: 55200,
-      currency: 'INR',
-      airline: 'Emirates',
-      departureTime: `${params.departDate}T23:55:00`,
-      arrivalTime: `${params.departDate}T04:20:00+1`,
-      duration: '8h 25m',
-      stops: 1,
-      stopDetails: '1 stop via DXB',
-      from: params.fromCode,
-      to: params.toCode,
-    },
-    {
-      id: 'mock-4',
-      price: 61000,
-      currency: 'INR',
-      airline: 'British Airways',
-      departureTime: `${params.departDate}T14:20:00`,
-      arrivalTime: `${params.departDate}T19:00:00`,
-      duration: '9h 40m',
-      stops: 0,
-      stopDetails: 'Direct',
-      from: params.fromCode,
-      to: params.toCode,
-    },
-    {
       id: 'mock-5',
       price: 35600,
       currency: 'INR',
@@ -237,19 +169,8 @@ export function getMockFlights(params: SearchParams): FlightResult[] {
   ];
 }
 
-// Step 3: Search Airports
-export async function searchAirportsByQuery(query: string): Promise<any[]> {
-  if (!RAPIDAPI_KEY || !query) return [];
-  try {
-    const res = await fetch(
-      `${BASE_URL}/v1/flights/searchAirport?query=${encodeURIComponent(query)}&locale=en-US`,
-      { headers }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return data?.data || [];
-  } catch (err) {
-    console.error('[FlightAPI] searchAirportsByQuery failed:', err);
-    return [];
-  }
+export async function searchAirportsByQuery(_query: string): Promise<any[]> {
+  // Since Google Flights natively supports IATA, we don't need to resolve EntityIDs anymore.
+  // We can just rely on our offline AIRPORTS database for the Search bar autocomplete!
+  return [];
 }
