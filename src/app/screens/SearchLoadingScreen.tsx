@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchFlights, FlightResult } from '../../lib/flightApi';
+import { useStore } from '../../store/useStore';
 import { fetchBookingHotels, fetchAirbnbProperties, fetchVisaDetails, fetchEmbassyDetails } from '../../lib/additionalApis';
 import { Plane, Hotel, MapPin, Thermometer, Camera, Utensils, Clock, Home, FileText, Landmark } from 'lucide-react';
 import type { SearchState } from './SearchScreen';
@@ -130,6 +131,7 @@ export function SearchLoadingScreen() {
   const destination = searchState?.to || { code: 'LHR', city: 'London', flag: '🇬🇧', country: 'UK' } as any;
   const tips        = getTips(destination.code);
   const DURATION    = 18000; // 18 seconds total
+  const addSearch   = useStore((state) => state.addSearch);
 
   // Fetch real flight data
   useEffect(() => {
@@ -153,9 +155,20 @@ export function SearchLoadingScreen() {
         currency: 'INR'
       }).then(flights => {
         fetchedFlightsRef.current = flights;
+        // Save the best price if found
+        if (flights && flights.length > 0) {
+          addSearch({
+            from: searchState.from.city,
+            to: searchState.to.city,
+            code: `${searchState.from.code}→${searchState.to.code}`,
+            date: new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            flag: destination.flag || '✈️',
+            price: `₹${flights[0].price.toLocaleString('en-IN')}`
+          });
+        }
       }).catch(err => console.error('Failed to fetch flights:', err));
     }
-  }, [searchState]);
+  }, [searchState, destination.flag, addSearch]);
 
   // Fetch destination travel data with actual user search parameters
   useEffect(() => {

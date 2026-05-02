@@ -7,7 +7,7 @@ interface HomeScreenProps {
   onNavigate: (screen: string) => void;
 }
 
-const recentSearches = [
+const mockRecentSearches = [
   { from: 'Delhi', to: 'London', code: 'DEL→LHR', date: 'May 15', flag: '🇬🇧', price: '₹43,500' },
   { from: 'Mumbai', to: 'Dubai', code: 'BOM→DXB', date: 'Jun 20', flag: '🇦🇪', price: '₹8,200' },
   { from: 'Bangalore', to: 'Singapore', code: 'BLR→SIN', date: 'Apr 10', flag: '🇸🇬', price: '₹20,500' },
@@ -28,6 +28,8 @@ const liveDeals = [
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const user = useStore((state) => state.user);
+  const storeRecentSearches = useStore((state) => state.recentSearches);
+  const recentSearches = storeRecentSearches.length > 0 ? storeRecentSearches : mockRecentSearches;
 
   return (
     <div className="min-h-screen pb-28">
