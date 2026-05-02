@@ -1,14 +1,17 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Filter, SlidersHorizontal } from 'lucide-react';
 import { EnhancedFlightCard } from '../components/EnhancedFlightCard';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
+import type { FlightResult } from '../../lib/flightApi';
+import type { SearchState } from './SearchScreen';
 
 interface ResultsScreenProps {
   onBack?: () => void;
 }
 
-const flights = [
+const mockFlights = [
   {
     airline: 'IndiGo',
     departureTime: '08:30',
@@ -64,8 +67,35 @@ const flights = [
 const sortOptions = ['Cheapest', 'Fastest', 'Best rated', 'Non-stop'];
 
 export function ResultsScreen({ onBack }: ResultsScreenProps) {
+  const location = useLocation();
+  const state = location.state as { searchState?: SearchState, flights?: FlightResult[] } | null;
+  const searchState = state?.searchState;
+  const apiFlights = state?.flights;
+
   const [sortBy, setSortBy] = useState('Cheapest');
   const [showFilters, setShowFilters] = useState(false);
+
+  const displayFlights = apiFlights && apiFlights.length > 0 
+    ? apiFlights.map((f, i) => ({
+        airline: f.airline,
+        departureTime: new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        arrivalTime: new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        duration: f.duration,
+        stops: f.stopDetails || (f.stops === 0 ? 'Non-stop' : `${f.stops} stop(s)`),
+        price: f.price,
+        savings: i === 0 ? 3200 : 0,
+        rating: 4.5,
+        reviews: 1200 + Math.floor(Math.random() * 1000),
+        delay: 0,
+        isMonitoring: i === 0
+      }))
+    : mockFlights;
+
+  // Format date correctly
+  const displayDate = searchState?.departDate
+    ? new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'May 15, 2026';
+
 
   return (
     <div className="min-h-screen">
@@ -82,11 +112,15 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
             </button>
           )}
           <div className="flex-1">
-            <div className="font-black text-[#001F3F] text-lg leading-tight">Delhi → London</div>
-            <div className="text-xs text-[#001F3F]/50 font-medium">May 15, 2026 · 2 passengers</div>
+            <div className="font-black text-[#001F3F] text-lg leading-tight">
+              {searchState ? `${searchState.from.city} → ${searchState.to.city}` : 'Delhi → London'}
+            </div>
+            <div className="text-xs text-[#001F3F]/50 font-medium">
+              {displayDate} · {searchState?.passengers || 2} passenger{searchState?.passengers !== 1 ? 's' : ''}
+            </div>
           </div>
           <div className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#00A854]/15 to-transparent border border-[#00A854]/20">
-            <span className="text-xs font-black text-[#00A854]">{flights.length} found</span>
+            <span className="text-xs font-black text-[#00A854]">{displayFlights.length} found</span>
           </div>
         </div>
 
@@ -140,7 +174,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
 
       {/* Flight list */}
       <div className="px-4 pt-2 pb-8 space-y-3">
-        {flights.map((flight, i) => (
+        {displayFlights.map((flight, i) => (
           <EnhancedFlightCard key={i} {...flight} />
         ))}
 

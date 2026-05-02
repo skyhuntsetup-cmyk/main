@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
+import { searchFlights, FlightResult } from '../../lib/flightApi';
 import { Plane, Hotel, MapPin, Thermometer, Camera, Utensils, Clock } from 'lucide-react';
 import type { SearchState } from './SearchScreen';
 
@@ -117,15 +119,38 @@ export function SearchLoadingScreen() {
   const [progress, setProgress]   = useState(0);
   const [tipIndex, setTipIndex]   = useState(0);
   const [phase, setPhase]         = useState<'scanning' | 'hotels' | 'ready'>('scanning');
+  const fetchedFlightsRef         = useRef<FlightResult[] | null>(null);
 
   const destination = searchState?.to || { code: 'LHR', city: 'London', flag: '🇬🇧' } as any;
   const tips        = getTips(destination.code);
   const DURATION    = 18000; // 18 seconds total
 
+  // Fetch real flight data
+  useEffect(() => {
+    if (searchState) {
+      let cabinMap = 'economy';
+      if (searchState.cabin === 'Premium Economy') cabinMap = 'premium_economy';
+      else if (searchState.cabin === 'Business') cabinMap = 'business';
+      else if (searchState.cabin === 'First Class') cabinMap = 'first';
+
+      searchFlights({
+        fromCode: searchState.from.code,
+        toCode: searchState.to.code,
+        departDate: searchState.departDate,
+        returnDate: searchState.tripType === 'round-trip' ? searchState.returnDate : undefined,
+        adults: searchState.passengers,
+        cabinClass: cabinMap as any,
+        currency: 'INR'
+      }).then(flights => {
+        fetchedFlightsRef.current = flights;
+      }).catch(err => console.error('Failed to fetch flights:', err));
+    }
+  }, [searchState]);
+
   // Redirect to results after duration
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/results', { state: searchState, replace: true });
+      navigate('/results', { state: { searchState, flights: fetchedFlightsRef.current }, replace: true });
     }, DURATION);
     return () => clearTimeout(timer);
   }, [navigate, searchState]);
