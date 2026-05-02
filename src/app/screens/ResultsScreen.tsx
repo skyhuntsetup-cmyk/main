@@ -75,7 +75,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   const [sortBy, setSortBy] = useState('Cheapest');
   const [showFilters, setShowFilters] = useState(false);
 
-  const displayFlights = apiFlights && apiFlights.length > 0 
+  const rawDisplayFlights = apiFlights && apiFlights.length > 0 
     ? apiFlights.map((f, i) => ({
         airline: f.airline,
         departureTime: new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -84,12 +84,32 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
         stops: f.stopDetails || (f.stops === 0 ? 'Non-stop' : `${f.stops} stop(s)`),
         price: f.price,
         savings: i === 0 ? 3200 : 0,
-        rating: 4.5,
+        rating: 4.5 - (i % 3) * 0.2, // Fake varying ratings for sorting
         reviews: 1200 + Math.floor(Math.random() * 1000),
         delay: 0,
         isMonitoring: i === 0
       }))
     : mockFlights;
+
+  let displayFlights = [...rawDisplayFlights];
+  if (sortBy === 'Cheapest') {
+    displayFlights.sort((a, b) => a.price - b.price);
+  } else if (sortBy === 'Fastest') {
+    const parseDuration = (d: string) => {
+      if (d === 'N/A') return 999999;
+      const hMatch = d.match(/(\d+)h/);
+      const mMatch = d.match(/(\d+)m/);
+      const h = hMatch ? parseInt(hMatch[1], 10) : 0;
+      const m = mMatch ? parseInt(mMatch[1], 10) : 0;
+      return h * 60 + m;
+    };
+    displayFlights.sort((a, b) => parseDuration(a.duration) - parseDuration(b.duration));
+  } else if (sortBy === 'Best rated') {
+    displayFlights.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  } else if (sortBy === 'Non-stop') {
+    displayFlights = displayFlights.filter(f => f.stops.toLowerCase().includes('non-stop') || f.stops.toLowerCase().includes('direct') || f.stops === '0');
+    displayFlights.sort((a, b) => a.price - b.price);
+  }
 
   // Format date correctly
   const displayDate = searchState?.departDate

@@ -1,16 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plane, Cloud, MapPin, Calendar, TrendingDown, Shield, Zap, Brain, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plane, Cloud, Calendar, TrendingDown, Shield, Zap, Brain, ArrowRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { AirportSearch } from '../components/AirportSearch';
+import { AIRPORTS } from '../../data/airports';
 
 interface LandingPageProps {
   onNavigate: (screen: string) => void;
 }
 
 export function LandingPage({ onNavigate }: LandingPageProps) {
+  const navigate = useNavigate();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const { user, isAuthenticated } = useStore();
+
+  const [from, setFrom] = useState(AIRPORTS.find(a => a.code === 'JFK') || AIRPORTS[0]);
+  const [to, setTo] = useState(AIRPORTS.find(a => a.code === 'LHR') || AIRPORTS[1]);
+  const [departDate, setDepartDate] = useState(
+    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+  );
 
   // Mouse parallax effect
   useEffect(() => {
@@ -241,58 +251,40 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                   {/* Search Fields */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#001F3F]/80 px-2">
-                        <MapPin size={16} className="text-[#00F5FF]" />
-                        From
-                      </label>
-                      <input
-                        type="text"
+                      <AirportSearch
+                        label="From"
+                        value={from}
+                        onChange={setFrom}
                         placeholder="New York (JFK)"
-                        className="w-full h-14 px-5 rounded-xl
-                                 bg-white/80 backdrop-blur-sm
-                                 border-2 border-white/60
-                                 text-[#001F3F] font-semibold placeholder:text-[#001F3F]/40
-                                 focus:border-[#00F5FF] focus:bg-white focus:outline-none
-                                 focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)]
-                                 hover:border-[#00F5FF]/50
-                                 transition-all duration-200"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#001F3F]/80 px-2">
-                        <MapPin size={16} className="text-[#00F5FF]" />
-                        To
-                      </label>
-                      <input
-                        type="text"
+                      <AirportSearch
+                        label="To"
+                        value={to}
+                        onChange={setTo}
                         placeholder="London (LHR)"
-                        className="w-full h-14 px-5 rounded-xl
-                                 bg-white/80 backdrop-blur-sm
-                                 border-2 border-white/60
-                                 text-[#001F3F] font-semibold placeholder:text-[#001F3F]/40
-                                 focus:border-[#00F5FF] focus:bg-white focus:outline-none
-                                 focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)]
-                                 hover:border-[#00F5FF]/50
-                                 transition-all duration-200"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#001F3F]/80 px-2">
-                        <Calendar size={16} className="text-[#00F5FF]" />
-                        Departure
+                      <label className="flex items-center gap-2 text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-1.5">
+                        <Calendar size={12} className="text-[#00F5FF]" /> Departure
                       </label>
                       <input
                         type="date"
-                        className="w-full h-14 px-5 rounded-xl
+                        value={departDate}
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={(e) => setDepartDate(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl
                                  bg-white/80 backdrop-blur-sm
                                  border-2 border-white/60
                                  text-[#001F3F] font-semibold
                                  focus:border-[#00F5FF] focus:bg-white focus:outline-none
                                  focus:shadow-[0_0_0_4px_rgba(0,245,255,0.15)]
                                  hover:border-[#00F5FF]/50
-                                 transition-all duration-200"
+                                 transition-all duration-200 appearance-none"
                       />
                     </div>
                   </div>
@@ -301,7 +293,17 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Primary CTA */}
                     <button
-                      onClick={() => onNavigate('search')}
+                      onClick={() => navigate('/loading', {
+                        state: {
+                          from,
+                          to,
+                          departDate,
+                          returnDate: '',
+                          passengers: 1,
+                          cabin: 'Economy',
+                          tripType: 'one-way'
+                        }
+                      })}
                       className="flex-1 h-16 rounded-xl
                                bg-gradient-to-r from-[#00F5FF] via-[#00D9FF] to-[#00B8D4]
                                text-white font-bold text-lg
