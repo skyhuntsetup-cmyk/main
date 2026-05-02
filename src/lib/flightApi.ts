@@ -65,12 +65,12 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
 
   try {
     // Use provided entity IDs or fetch them sequentially to avoid rate limits
-    let fromEntity = params.fromEntityId;
+    let fromEntity: string | null | undefined = params.fromEntityId;
     if (!fromEntity) {
       fromEntity = await getSkyId(params.fromCode);
     }
     
-    let toEntity = params.toEntityId;
+    let toEntity: string | null | undefined = params.toEntityId;
     if (!toEntity) {
       toEntity = await getSkyId(params.toCode);
     }
