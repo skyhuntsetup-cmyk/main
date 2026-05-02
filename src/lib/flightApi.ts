@@ -30,6 +30,8 @@ export interface FlightResult {
 export interface SearchParams {
   fromCode: string;
   toCode: string;
+  fromEntityId?: string;
+  toEntityId?: string;
   departDate: string;          // YYYY-MM-DD
   returnDate?: string;         // YYYY-MM-DD (for round trips)
   adults?: number;
@@ -62,11 +64,16 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
   }
 
   try {
-    // Get entityIds for both airports
-    const [fromEntity, toEntity] = await Promise.all([
-      getSkyId(params.fromCode),
-      getSkyId(params.toCode),
-    ]);
+    // Use provided entity IDs or fetch them sequentially to avoid rate limits
+    let fromEntity = params.fromEntityId;
+    if (!fromEntity) {
+      fromEntity = await getSkyId(params.fromCode);
+    }
+    
+    let toEntity = params.toEntityId;
+    if (!toEntity) {
+      toEntity = await getSkyId(params.toCode);
+    }
 
     if (!fromEntity || !toEntity) {
       console.warn('[FlightAPI] Could not resolve airport entity IDs');
@@ -220,4 +227,21 @@ export function getMockFlights(params: SearchParams): FlightResult[] {
       to: params.toCode,
     },
   ];
+}
+
+// Step 3: Search Airports
+export async function searchAirportsByQuery(query: string): Promise<any[]> {
+  if (!RAPIDAPI_KEY || !query) return [];
+  try {
+    const res = await fetch(
+      `${BASE_URL}/v1/flights/searchAirport?query=${encodeURIComponent(query)}&locale=en-US`,
+      { headers }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data?.data || [];
+  } catch (err) {
+    console.error('[FlightAPI] searchAirportsByQuery failed:', err);
+    return [];
+  }
 }

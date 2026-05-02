@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { searchAirports, type Airport } from '../../data/airports';
+import { searchAirportsByQuery } from '../../lib/flightApi';
 
 interface AirportSearchProps {
   value: Airport | null;
@@ -17,13 +18,50 @@ export function AirportSearch({ value, onChange, placeholder = 'Search city or a
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   // Show top results on focus if no query
   useEffect(() => {
-    if (focused) {
-      setResults(searchAirports(query, 8));
+    if (focused && !query) {
+      setResults(searchAirports('', 8));
       setIsOpen(true);
     }
   }, [focused, query]);
+
+  // Debounced API search
+  useEffect(() => {
+    if (!query) return;
+    const timer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const apiData = await searchAirportsByQuery(query);
+        if (apiData && apiData.length > 0) {
+          const formatted = apiData.map(item => ({
+            code: item.navigation?.relevantFlightParams?.skyId || '',
+            entityId: item.navigation?.entityId || item.navigation?.relevantFlightParams?.entityId || '',
+            city: item.presentation?.title || '',
+            name: item.presentation?.subtitle || '',
+            country: item.presentation?.subtitle || '',
+            flag: '✈️'
+          })).filter(a => a.code);
+          
+          if (formatted.length > 0) {
+            setResults(formatted);
+          } else {
+            setResults(searchAirports(query, 8));
+          }
+        } else {
+          setResults(searchAirports(query, 8));
+        }
+      } catch (err) {
+        setResults(searchAirports(query, 8));
+      } finally {
+        setIsLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   // Close on outside click
   useEffect(() => {
@@ -53,8 +91,10 @@ export function AirportSearch({ value, onChange, placeholder = 'Search city or a
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const q = e.target.value;
     setQuery(q);
-    setResults(searchAirports(q, 8));
     setIsOpen(true);
+    if (!q) {
+      setResults(searchAirports('', 8));
+    }
   };
 
   const displayValue = focused ? query : (value ? `${value.flag} ${value.city} (${value.code})` : '');
@@ -80,7 +120,12 @@ export function AirportSearch({ value, onChange, placeholder = 'Search city or a
                      focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,245,255,0.15)]
                      transition-all placeholder:text-[#001F3F]/40 placeholder:font-normal"
         />
-        {value && !focused && (
+        {isLoading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div className="w-4 h-4 border-2 border-[#0047AB] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        {value && !focused && !isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             <span className="text-xs font-black text-[#0047AB] bg-[#0047AB]/10 px-2 py-1 rounded-lg">
               {value.code}

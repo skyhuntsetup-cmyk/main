@@ -7,6 +7,7 @@ export interface Airport {
   city: string;
   country: string;
   flag: string;
+  entityId?: string;
 }
 
 export const AIRPORTS: Airport[] = [
