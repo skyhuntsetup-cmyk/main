@@ -74,9 +74,11 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
 
   const [sortBy, setSortBy] = useState('Cheapest');
   const [showFilters, setShowFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const rawDisplayFlights = apiFlights && apiFlights.length > 0 
     ? apiFlights.map((f, i) => ({
+        id: f.id || `flight-${i}`,
         airline: f.airline,
         departureTime: new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         arrivalTime: new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -157,7 +159,10 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
             {sortOptions.map((opt) => (
               <button
                 key={opt}
-                onClick={() => setSortBy(opt)}
+                onClick={() => {
+                  setSortBy(opt);
+                  setVisibleCount(5); // Reset visible count on filter change
+                }}
                 className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   sortBy === opt
                     ? 'bg-gradient-to-r from-[#0047AB] to-[#00F5FF] text-white shadow-md'
@@ -194,13 +199,19 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
 
       {/* Flight list */}
       <div className="px-4 pt-2 pb-8 space-y-3">
-        {displayFlights.map((flight, i) => (
-          <EnhancedFlightCard key={i} {...flight} />
+        {displayFlights.slice(0, visibleCount).map((flight) => (
+          <EnhancedFlightCard key={flight.id} {...flight} />
         ))}
 
-        <PremiumButton variant="glass" className="w-full mt-4">
-          Load More Flights
-        </PremiumButton>
+        {visibleCount < displayFlights.length && (
+          <PremiumButton 
+            variant="glass" 
+            className="w-full mt-4"
+            onClick={() => setVisibleCount(v => v + 5)}
+          >
+            Load More Flights
+          </PremiumButton>
+        )}
       </div>
     </div>
   );
