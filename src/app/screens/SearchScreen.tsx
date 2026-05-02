@@ -53,7 +53,7 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
     new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
   );
   const [passengers, setPassengers] = useState(1);
-  const [cabin, setCabin]           = useState('Economy');
+  const [cabin, setCabin]           = useState('economy');
 
   const handleSwap = () => {
     const tmp = from;
@@ -202,9 +202,9 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
                 {cabinClasses.map((c) => (
                   <button
                     key={c.label}
-                    onClick={() => setCabin(c.label)}
+                    onClick={() => setCabin(c.value)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      cabin === c.label
+                      cabin === c.value
                         ? 'bg-gradient-to-r from-[#0047AB] to-[#00F5FF] text-white shadow-md'
                         : 'bg-white/30 border-[1.5px] border-white/60 text-[#001F3F]/60 hover:bg-white/50'
                     }`}
