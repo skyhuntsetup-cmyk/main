@@ -98,7 +98,8 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
       };
 
       const firstFlight = item.flights?.[0];
-      const lastFlight = item.flights?.[item.flights.length - 1];
+      const flightsLen = item.flights?.length || 0;
+      const lastFlight = flightsLen > 0 ? item.flights[flightsLen - 1] : undefined;
       const mainAirline = firstFlight?.airline || 'Unknown Airline';
 
       return {
