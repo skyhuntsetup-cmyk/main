@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
+import { searchFlights } from '../lib/flightApi';
 
 interface UserProfile {
   fullName: string;
@@ -40,12 +41,23 @@ export interface Alert {
   dateAdded: number;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'price_drop' | 'info' | 'alert';
+  timestamp: number;
+  read: boolean;
+}
+
 interface AppState {
   user: UserProfile | null;
   isAuthenticated: boolean;
   currency: string;
   recentSearches: RecentSearch[];
   alerts: Alert[];
+  notifications: AppNotification[];
+  isCheckingAlerts: boolean;
   
   login: (user: UserProfile) => void;
   logout: () => void;
@@ -58,6 +70,9 @@ interface AppState {
   toggleAlert: (id: string) => void;
   deleteAlert: (id: string) => void;
   
+  markNotificationRead: (id: string) => void;
+  checkPriceAlerts: () => Promise<void>;
+  
   fetchUserData: () => Promise<void>;
 }
 
@@ -69,6 +84,8 @@ export const useStore = create<AppState>()(
       currency: 'INR',
       recentSearches: [],
       alerts: [],
+      notifications: [],
+      isCheckingAlerts: false,
       
       login: (user) => {
         set({ user, isAuthenticated: true });
@@ -124,6 +141,10 @@ export const useStore = create<AppState>()(
             }));
             set({ alerts: mappedAlerts });
           }
+
+          // Trigger background alert check
+          get().checkPriceAlerts();
+
         } catch (err) {
           console.error("Failed to sync with Supabase", err);
         }
@@ -212,6 +233,75 @@ export const useStore = create<AppState>()(
         if (supabase) {
           await supabase.from('price_alerts').delete().eq('id', id);
         }
+      },
+
+      markNotificationRead: (id) => set((state) => ({
+        notifications: state.notifications.map(n => 
+          n.id === id ? { ...n, read: true } : n
+        )
+      })),
+
+      checkPriceAlerts: async () => {
+        const { alerts } = get();
+        const activeAlerts = alerts.filter(a => a.active);
+        
+        if (activeAlerts.length === 0) return;
+
+        set({ isCheckingAlerts: true });
+        
+        const newNotifications: AppNotification[] = [];
+
+        try {
+          for (const alert of activeAlerts) {
+            // For demo purposes, we will fetch flights 14 days from now.
+            let departDateStr = new Date(new Date().setDate(new Date().getDate() + 14)).toISOString().split('T')[0];
+            
+            try {
+              const flights = await searchFlights({
+                fromCode: alert.fromCode,
+                toCode: alert.toCode,
+                departDate: departDateStr,
+                adults: 1,
+                cabinClass: 'economy',
+                currency: get().currency
+              });
+
+              if (flights && flights.length > 0) {
+                const cheapest = flights[0].price;
+                if (cheapest < alert.targetPrice) {
+                  // Price dropped!
+                  newNotifications.push({
+                    id: Math.random().toString(),
+                    title: `Price Drop Alert: ${alert.route}`,
+                    message: `Prices have dropped to ₹${cheapest.toLocaleString('en-IN')}, well below your target of ₹${alert.targetPrice}!`,
+                    type: 'price_drop',
+                    timestamp: Date.now(),
+                    read: false
+                  });
+
+                  // Update alert currentPrice
+                  set((state) => ({
+                    alerts: state.alerts.map(a => a.id === alert.id ? { ...a, currentPrice: cheapest } : a)
+                  }));
+
+                  if (supabase) {
+                    await supabase.from('price_alerts').update({ current_price: cheapest }).eq('id', alert.id);
+                  }
+                }
+              }
+            } catch (e) {
+              console.error(`Error checking alert for ${alert.route}`, e);
+            }
+          }
+
+          if (newNotifications.length > 0) {
+            set((state) => ({
+              notifications: [...newNotifications, ...state.notifications].slice(0, 50)
+            }));
+          }
+        } finally {
+          set({ isCheckingAlerts: false });
+        }
       }
     }),
     {
@@ -219,7 +309,8 @@ export const useStore = create<AppState>()(
       partialize: (state) => ({ 
         recentSearches: state.recentSearches,
         alerts: state.alerts,
-        currency: state.currency
+        currency: state.currency,
+        notifications: state.notifications
       }),
     }
   )

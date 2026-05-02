@@ -1,4 +1,5 @@
-import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin } from 'lucide-react';
+import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { useStore } from '../../store/useStore';
@@ -17,6 +18,16 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const activeAlerts = alerts.filter(a => a.active).length;
   const storeRecentSearches = useStore((state) => state.recentSearches);
   const recentSearches = storeRecentSearches.length > 0 ? storeRecentSearches : mockRecentSearches;
+  const notifications = useStore((state) => state.notifications);
+  const isCheckingAlerts = useStore((state) => state.isCheckingAlerts);
+  const markNotificationRead = useStore((state) => state.markNotificationRead);
+  
+  const unreadNotifications = notifications.filter(n => !n.read);
+
+  useEffect(() => {
+    // Optionally trigger check automatically if we have alerts but haven't checked recently
+    // get().checkPriceAlerts() is already called in fetchUserData, but we can have a manual refresh button too.
+  }, []);
 
   return (
     <div className="min-h-screen pb-28">
@@ -58,6 +69,50 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           ))}
         </div>
       </div>
+
+      {/* Notifications Area */}
+      {(isCheckingAlerts || unreadNotifications.length > 0) && (
+        <div className="px-5 mb-6">
+          {isCheckingAlerts && (
+            <div className="flex items-center justify-center gap-2 py-3 mb-2 rounded-2xl bg-white/40 border border-[#001F3F]/5">
+              <Loader2 size={16} className="text-[#0047AB] animate-spin" />
+              <span className="text-xs font-bold text-[#001F3F]/50">Checking alerts in background...</span>
+            </div>
+          )}
+
+          {unreadNotifications.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Alerts & Updates</h2>
+              </div>
+              {unreadNotifications.map(notification => (
+                <LiquidGlassCard key={notification.id} className={notification.type === 'price_drop' ? 'border-[#00A854]/30 bg-gradient-to-r from-[#00A854]/5 to-transparent' : ''}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                        {notification.type === 'price_drop' ? <TrendingDown size={20} className="text-[#00A854]" /> : <Bell size={20} className="text-[#0047AB]" />}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-[#001F3F] text-sm">{notification.title}</h3>
+                        <p className="text-xs text-[#001F3F]/70 mt-1">{notification.message}</p>
+                        <p className="text-[10px] text-[#001F3F]/40 font-bold mt-2 uppercase tracking-wider">
+                          {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => markNotificationRead(notification.id)}
+                      className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm border border-[#001F3F]/5 text-[#001F3F]/40 hover:text-[#001F3F]"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </LiquidGlassCard>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Quick Search CTA */}
       <div className="px-5 mb-6">
