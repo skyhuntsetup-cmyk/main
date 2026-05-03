@@ -3,6 +3,7 @@ import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as Setting
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { useStore } from '../../store/useStore';
+import { ProfilePanel } from './settings/ProfilePanel';
 
 export function SettingsScreen() {
   const user = useStore((state) => state.user);
@@ -14,6 +15,7 @@ export function SettingsScreen() {
   
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Deal Preferences Form State
   const [dealPrefs, setDealPrefs] = useState(user?.dealPreferences || {
@@ -67,9 +69,10 @@ export function SettingsScreen() {
     { value: uniqueRoutes, label: 'Routes', icon: MapPin, color: 'from-[#00A854] to-[#008f47]' },
     { value: currentTier === 'pro' ? '∞' : currentTier === 'premium' ? 20 : 5, label: 'Alert Limit', icon: Star, color: 'from-[#F39C12] to-[#e89c0c]' },
   ];
-
-  const handleSaveDealPrefs = () => {
-    updateProfile({ dealPreferences: dealPrefs });
+  const handleSaveDealPrefs = async () => {
+    setIsSaving(true);
+    await updateProfile({ dealPreferences: dealPrefs });
+    setIsSaving(false);
     setActivePanel(null);
   };
 
@@ -123,7 +126,7 @@ export function SettingsScreen() {
                   className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${
                     dealPrefs.cabinClass === cls.id 
                     ? 'border-[#0047AB] bg-[#0047AB]/5 text-[#0047AB]' 
-                    : 'border-transparent bg-white/50 text-[#001F3F]/60'
+                              : 'border-transparent bg-white/50 text-[#001F3F]/60'
                   }`}
                 >
                   {cls.label}
@@ -151,10 +154,36 @@ export function SettingsScreen() {
             </div>
           </LiquidGlassCard>
 
-          <PremiumButton variant="primary" className="w-full h-14 text-lg mt-8" onClick={handleSaveDealPrefs}>
-            <Save size={18} className="mr-2" />
-            Save Preferences
+          <PremiumButton variant="primary" className="w-full h-14 text-lg mt-8" onClick={handleSaveDealPrefs} disabled={isSaving}>
+            {isSaving ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <Save size={18} className="mr-2" />
+                Save Preferences
+              </>
+            )}
           </PremiumButton>
+        </div>
+      </div>
+    );
+  }
+
+  if (activePanel === 'profile') {
+    return (
+      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up">
+        <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+          <button onClick={() => setActivePanel(null)} className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center text-[#001F3F]/50">
+            <ChevronLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-[#001F3F]">My Profile</h1>
+            <p className="text-xs text-[#001F3F]/50 font-medium">Manage your personal details</p>
+          </div>
+        </div>
+
+        <div className="px-5">
+          <ProfilePanel onBack={() => setActivePanel(null)} />
         </div>
       </div>
     );

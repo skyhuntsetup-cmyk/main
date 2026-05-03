@@ -94,33 +94,86 @@ export const useStore = create<AppState>()(
       
       logout: () => set({ user: null, isAuthenticated: false, recentSearches: [], alerts: [] }),
       
-      updateProfile: (updates) => set((state) => ({
-        user: state.user ? { ...state.user, ...updates } : null
-      })),
+      updateProfile: async (updates) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        const newUser = { ...currentUser, ...updates };
+        set({ user: newUser });
+
+        // Sync to Supabase
+        if (supabase) {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const { error } = await supabase
+              .from('profiles')
+              .upsert({
+                id: authUser.id,
+                full_name: newUser.fullName,
+                phone: newUser.phone,
+                home_airport: newUser.homeAirport,
+                date_of_birth: newUser.dateOfBirth,
+                preferences: newUser.preferences,
+                deal_preferences: newUser.dealPreferences,
+                is_premium: newUser.accountTier !== 'free'
+              });
+            if (error) console.error("Error syncing profile:", error);
+          }
+        }
+      },
       
       setCurrency: (currency) => set({ currency }),
 
-      setAccountTier: (accountTier) => set((state) => ({
-        user: state.user ? { ...state.user, accountTier } : null
-      })),
+      setAccountTier: (accountTier) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, accountTier } : null
+        }));
+        get().updateProfile({ accountTier });
+      },
 
       fetchUserData: async () => {
         if (!supabase) return;
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (!authUser) return;
+
+          // Fetch Profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+
+          if (profile) {
+            set({
+              user: {
+                fullName: profile.full_name || '',
+                email: authUser.email || '',
+                phone: profile.phone || '',
+                homeAirport: profile.home_airport || '',
+                dateOfBirth: profile.date_of_birth || '',
+                preferences: profile.preferences || [],
+                accountTier: profile.is_premium ? 'premium' : 'free',
+                dealPreferences: profile.deal_preferences || {
+                  maxBudget: 50000,
+                  cabinClass: 'economy',
+                  maxLayovers: 1
+                }
+              }
+            });
+          }
 
           const { data: searches } = await supabase
             .from('recent_searches')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('user_id', authUser.id)
             .order('created_at', { ascending: false })
             .limit(5);
 
           const { data: alerts } = await supabase
             .from('price_alerts')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('user_id', authUser.id)
             .order('created_at', { ascending: false });
 
           if (searches) {

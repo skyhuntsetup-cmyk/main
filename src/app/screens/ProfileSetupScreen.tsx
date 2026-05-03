@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from '../components/Card';
-import { User, Phone, MapPin, Calendar, Sparkles } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Sparkles, AlertCircle } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { supabase } from '../../lib/supabase';
 
@@ -9,7 +9,7 @@ interface ProfileSetupScreenProps {
 }
 
 export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
-  const login = useStore((state) => state.login);
+  const updateProfile = useStore((state) => state.updateProfile);
   const user = useStore((state) => state.user);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -22,30 +22,51 @@ export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
       if (supabase) {
-        const { error } = await supabase.auth.updateUser({
-          data: { full_name: formData.fullName }
+        // 1. Update Auth Metadata (for easy access in other places)
+        const { error: authError } = await supabase.auth.updateUser({
+          data: { 
+            full_name: formData.fullName,
+            setup_completed: true 
+          }
         });
-        if (error) throw error;
+        if (authError) throw authError;
+
+        // 2. Update/Sync Profile in database via store
+        await updateProfile({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: user?.email || '',
+          homeAirport: formData.homeAirport,
+          dateOfBirth: formData.dateOfBirth,
+          preferences: selectedPreferences,
+          accountTier: 'free',
+          dealPreferences: {
+            maxBudget: 50000,
+            cabinClass: 'economy',
+            maxLayovers: 1
+          }
+        });
       }
 
-      login({
-        fullName: formData.fullName,
-        phone: formData.phone,
-        email: user?.email || '',
-        homeAirport: formData.homeAirport,
-        dateOfBirth: formData.dateOfBirth,
-        preferences: [],
-        accountTier: 'free'
-      });
       onComplete();
     } catch (err: any) {
-      alert(err.message || 'Failed to update profile');
+      setError(err.message || 'Failed to update profile');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const togglePreference = (pref: string) => {
+    setSelectedPreferences(prev => 
+      prev.includes(pref) ? prev.filter(p => p !== pref) : [...prev, pref]
+    );
   };
 
   const popularAirports = [
@@ -197,19 +218,32 @@ export function ProfileSetupScreen({ onComplete }: ProfileSetupScreenProps) {
                     'Window Seat',
                     'Aisle Seat',
                     'Morning Flights'
-                  ].map((pref) => (
-                    <button
-                      key={pref}
-                      type="button"
-                      className="px-4 py-3 rounded-xl border-2 border-[#E8E8E8] text-sm font-semibold text-[#666666]
-                               hover:border-[#1F77D2] hover:bg-[#1F77D2]/5 hover:text-[#1F77D2]
-                               transition-all duration-200"
-                    >
-                      {pref}
-                    </button>
-                  ))}
+                    ].map((pref) => {
+                      const isSelected = selectedPreferences.includes(pref);
+                      return (
+                        <button
+                          key={pref}
+                          type="button"
+                          onClick={() => togglePreference(pref)}
+                          className={`px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 ${
+                            isSelected 
+                              ? 'border-[#1F77D2] bg-[#1F77D2]/10 text-[#1F77D2]' 
+                              : 'border-[#E8E8E8] text-[#666666] hover:border-[#1F77D2]/50 hover:bg-[#1F77D2]/5'
+                          }`}
+                        >
+                          {pref}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+
+                {error && (
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-3 text-red-600 animate-shake">
+                    <AlertCircle size={20} />
+                    <p className="text-sm font-bold">{error}</p>
+                  </div>
+                )}
 
               {/* Submit Button */}
               <div className="pt-4">

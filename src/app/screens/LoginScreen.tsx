@@ -44,7 +44,9 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       let msg = err.message || 'Failed to send magic link';
       
       if (msg.includes('Unexpected end of JSON input') || msg.includes('Failed to fetch')) {
-        msg = 'Connection error: Could not reach Supabase. Please check your internet or if the project is paused.';
+        msg = 'Connection error: Could not reach Supabase. Check your internet or if an adblocker is blocking the request.';
+      } else if (msg.includes('rate limit exceeded')) {
+        msg = 'Email rate limit exceeded. Please wait a few minutes before trying again or check your Supabase rate limit settings.';
       }
       
       setError(msg);
@@ -73,7 +75,9 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       console.error('WhatsApp error details:', err);
       let msg = err.message || 'Failed to send WhatsApp code';
       if (msg.includes('Unexpected end of JSON input') || msg.includes('Failed to fetch')) {
-        msg = 'Connection error: Could not reach Supabase. Please check your internet.';
+        msg = 'Connection error: Could not reach Supabase.';
+      } else if (msg.includes('Unsupported phone provider')) {
+        msg = 'WhatsApp/SMS is not configured in your Supabase dashboard (requires a provider like Twilio).';
       }
       setError(msg);
     } finally {
