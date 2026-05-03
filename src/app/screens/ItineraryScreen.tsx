@@ -3,6 +3,7 @@ import { Sparkles, MapPin, Globe, Calendar, Heart, ArrowRight, Brain, ShieldChec
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { generateItinerary } from '../../lib/aiApi';
+import { getVisaRequirement } from '../../lib/visaApi';
 
 export function ItineraryScreen() {
   const [step, setStep] = useState<'input' | 'loading' | 'result'>('input');
@@ -38,7 +39,14 @@ export function ItineraryScreen() {
     }
 
     try {
-      const data = await generateItinerary(formData);
+      // 1. Fetch Live Visa Data
+      setLoadingStep('Accessing global visa regulations...');
+      const visaData = await getVisaRequirement(formData.sourceCountry, formData.destination);
+      const extraContext = visaData ? `VISA INFO: ${JSON.stringify(visaData)}` : '';
+
+      // 2. Generate AI Itinerary with Live Data
+      setLoadingStep('Architecting your perfect trip...');
+      const data = await generateItinerary({ ...formData, extraContext });
       setResult(data);
       setStep('result');
     } catch (err: any) {

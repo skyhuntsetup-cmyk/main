@@ -1,14 +1,15 @@
-import { Home, Search, Bell, Compass, Settings } from 'lucide-react';
+import { Home, Search, Bell, Compass, Settings, Hotel } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface BottomNavProps {
-  activeTab: 'home' | 'search' | 'alerts' | 'discover' | 'settings';
-  onTabChange: (tab: 'home' | 'search' | 'alerts' | 'discover' | 'settings') => void;
+  activeTab: 'home' | 'search' | 'hotels' | 'alerts' | 'discover' | 'settings';
+  onTabChange: (tab: 'home' | 'search' | 'hotels' | 'alerts' | 'discover' | 'settings') => void;
 }
 
 const tabs = [
   { id: 'home' as const, icon: Home, label: 'Home' },
   { id: 'search' as const, icon: Search, label: 'Search' },
+  { id: 'hotels' as const, icon: Hotel, label: 'Hotels' },
   { id: 'alerts' as const, icon: Bell, label: 'Alerts' },
   { id: 'discover' as const, icon: Compass, label: 'Discover' },
   { id: 'settings' as const, icon: Settings, label: 'Settings' },

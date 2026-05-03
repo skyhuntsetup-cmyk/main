@@ -11,14 +11,15 @@ import { AlertsScreen } from './screens/AlertsScreen';
 import { DealsScreen } from './screens/DealsScreen';
 import { DiscoverScreen } from './screens/DiscoverScreen';
 import { ItineraryScreen } from './screens/ItineraryScreen';
+import { HotelsScreen } from './screens/HotelsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { BottomNav } from './components/BottomNav';
 import { AuthCallbackScreen } from './screens/AuthCallbackScreen';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 
-type Tab = 'home' | 'search' | 'alerts' | 'discover' | 'settings';
-const APP_TABS: Tab[] = ['home', 'search', 'alerts', 'discover', 'settings'];
+type Tab = 'home' | 'search' | 'hotels' | 'alerts' | 'discover' | 'settings';
+const APP_TABS: Tab[] = ['home', 'search', 'hotels', 'alerts', 'discover', 'settings'];
 
 function AppContent() {
   const location = useLocation();
@@ -106,6 +107,7 @@ function AppContent() {
           <Route path="/profile-setup" element={<ProfileSetupScreen onComplete={() => navigate('/home')} />} />
           <Route path="/home" element={<HomeScreen onNavigate={(s) => navigate(`/${s}`)} />} />
           <Route path="/search" element={<SearchScreen onSearch={(params) => navigate('/loading', { state: params })} />} />
+          <Route path="/hotels" element={<HotelsScreen />} />
           <Route path="/loading" element={<SearchLoadingScreen />} />
           <Route path="/results" element={<ResultsScreen onBack={() => navigate('/search')} />} />
           <Route path="/alerts" element={<AlertsScreen />} />

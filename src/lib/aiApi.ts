@@ -6,6 +6,7 @@ export async function generateItinerary(params: {
   duration: string;
   preferences: string;
   budget: string;
+  extraContext?: string;
 }) {
   // We use a Supabase Edge Function to proxy the request to Claude.
   // This avoids CORS issues and keeps the API key secure on the server.

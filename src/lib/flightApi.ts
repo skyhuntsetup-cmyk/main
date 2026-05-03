@@ -195,7 +195,17 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
   }
 }
 
-// Removed mock flights to force real errors.
+export async function getBookingUrl(token: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${BASE_URL}/getBookingUrl?token=${encodeURIComponent(token)}`, { headers });
+    if (!response.ok) throw new Error('Failed to fetch booking URL');
+    const data = await response.json();
+    return data.data?.booking_url || null;
+  } catch (error) {
+    console.error('[FlightAPI] getBookingUrl failed:', error);
+    return null;
+  }
+}
 
 export async function searchAirportsByQuery(_query: string): Promise<any[]> {
   // Since Google Flights natively supports IATA, we don't need to resolve EntityIDs anymore.

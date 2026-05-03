@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       - Dates: ${params.dates}
       - Budget: ${params.budget}
       - Preferences: ${params.preferences}
+      ${params.extraContext ? `\n      - ADDITIONAL LIVE DATA: ${params.extraContext}` : ''}
 
       CRITICAL REQUIREMENTS:
       1. DO NOT give generic advice. Mention specific street names, local restaurant names, and precise landmarks.
