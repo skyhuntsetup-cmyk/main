@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Compass, Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Compass, Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap, Brain } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { fetchTrendingDestinations, TrendingDestination } from '../../lib/discoveryApi';
@@ -8,6 +9,7 @@ import { useStore } from '../../store/useStore';
 
 export function DiscoverScreen() {
   const user = useStore(state => state.user);
+  const navigate = useNavigate();
   const homeAirport = user?.homeAirport || 'DEL';
   
   const [destinations, setDestinations] = useState<TrendingDestination[]>([]);
@@ -72,6 +74,24 @@ export function DiscoverScreen() {
             {cat}
           </button>
         ))}
+      </div>
+
+      {/* AI Itinerary Master CTA */}
+      <div className="px-5 mb-8">
+        <LiquidGlassCard hoverable onClick={() => navigate('/itinerary')} className="border-[#0047AB]/20 bg-gradient-to-br from-[#001F3F] to-[#0047AB] text-white">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg flex-shrink-0">
+              <Brain size={22} className="text-[#00F5FF]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-white text-base">AI Itinerary Master</div>
+              <div className="text-sm text-white/70 font-medium">Create a complete trip plan in seconds</div>
+            </div>
+            <div className="w-8 h-8 rounded-xl bg-[#00F5FF]/20 flex items-center justify-center flex-shrink-0">
+              <ArrowRight size={16} className="text-[#00F5FF]" />
+            </div>
+          </div>
+        </LiquidGlassCard>
       </div>
 
       <div className="px-5 space-y-8">

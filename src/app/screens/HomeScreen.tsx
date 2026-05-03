@@ -132,6 +132,24 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         </LiquidGlassCard>
       </div>
 
+      {/* AI Itinerary Master CTA */}
+      <div className="px-5 mb-6">
+        <LiquidGlassCard hoverable onClick={() => onNavigate('itinerary')} className="border-[#0047AB]/20 bg-gradient-to-br from-[#001F3F] to-[#0047AB] text-white">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg flex-shrink-0">
+              <Brain size={22} className="text-[#00F5FF]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-white text-base">AI Itinerary Master</div>
+              <div className="text-sm text-white/70 font-medium">Visa hacks · Daily plans · Local tips</div>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 text-[#00F5FF] text-[10px] font-black uppercase tracking-widest">
+              New
+            </div>
+          </div>
+        </LiquidGlassCard>
+      </div>
+
       {/* Live Deals Strip */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3 px-5">
