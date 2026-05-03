@@ -106,10 +106,14 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
       }))
       : mockFlights.map(m => ({
         ...m,
+        isBest: false,
+        segments: [],
+        airlineLogo: undefined,
         stopsCount: m.stops.toLowerCase().includes('non-stop') ? 0 : (parseInt(m.stops) || 1),
         fromCode: searchState?.from?.code || 'DEL',
         toCode: searchState?.to?.code || 'LHR',
-        date: searchState?.departDate
+        date: searchState?.departDate,
+        bookingUrl: undefined
       }));
   }, [apiFlights, searchState]);
 

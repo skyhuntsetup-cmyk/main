@@ -49,6 +49,10 @@ export interface FlightResult {
 export interface SearchParams {
   fromCode: string;
   toCode: string;
+  fromEntityId?: string;
+  toEntityId?: string;
+  fromCity?: string;
+  toCity?: string;
   departDate: string;          // YYYY-MM-DD
   returnDate?: string;         // YYYY-MM-DD
   adults?: number;
