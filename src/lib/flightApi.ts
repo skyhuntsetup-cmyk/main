@@ -96,10 +96,15 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
       queryParams.append('return_date', params.returnDate);
     }
 
+    console.log('[FlightAPI] Requesting:', `${BASE_URL}/searchFlights?${queryParams}`);
     const res = await fetch(`${BASE_URL}/searchFlights?${queryParams}`, { headers });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      console.error(`[FlightAPI] HTTP Error ${res.status}:`, await res.text());
+      throw new Error(`HTTP ${res.status}`);
+    }
 
     const data = await res.json();
+    console.log('[FlightAPI] Response data:', data);
     return parseGoogleFlights(data, params);
   } catch (err: any) {
     console.error('[FlightAPI] searchFlights failed:', err);
@@ -115,7 +120,10 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
     const otherFlights = (itineraries.otherFlights || []).map((f: any) => ({ ...f, _isBest: false }));
     const allFlights = [...topFlights, ...otherFlights];
 
-    if (allFlights.length === 0) return [];
+    if (allFlights.length === 0) {
+      console.warn('[FlightAPI] No flights found in response. Raw data:', JSON.stringify(data).slice(0, 500));
+      return [];
+    }
 
     return allFlights.map((item: any, idx: number) => {
       const formatTime = (timeStr: string) => {
