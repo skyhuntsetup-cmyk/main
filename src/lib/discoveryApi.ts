@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 export interface TrendingDestination {
   id: string;
   name: string;
@@ -9,8 +7,6 @@ export interface TrendingDestination {
   description: string;
   priceStart?: number;
 }
-
-const UNSPLASH_ACCESS_KEY = 'PLACEHOLDER'; // User should add their key
 
 export async function fetchTrendingDestinations(): Promise<TrendingDestination[]> {
   try {
