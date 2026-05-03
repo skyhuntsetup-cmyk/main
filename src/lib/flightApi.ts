@@ -83,14 +83,19 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
       arrival_id: params.toCode,
       outbound_date: params.departDate,
       adults: String(params.adults ?? 1),
-      children: String(params.children ?? 0),
-      infants_on_lap: String(params.infants ?? 0),
       travel_class: cabinMap[params.cabinClass || 'economy'],
       currency: params.currency || 'INR',
-      language_code: 'en-IN',
+      language_code: 'en-US', // Standardized
       country_code: 'IN',
       search_type: params.searchType || 'best',
     });
+
+    if (params.children && params.children > 0) {
+      queryParams.append('children', String(params.children));
+    }
+    if (params.infants && params.infants > 0) {
+      queryParams.append('infants_on_lap', String(params.infants));
+    }
 
     if (params.returnDate) {
       queryParams.append('return_date', params.returnDate);
@@ -114,6 +119,10 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
 
 function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
   try {
+    if (data?.status === false) {
+      console.error('[FlightAPI] API returned status:false. Message:', data.message);
+      return [];
+    }
     const itineraries = data?.data?.itineraries || {};
     // Merge best and other flights, marking the best ones
     const topFlights = (itineraries.topFlights || []).map((f: any) => ({ ...f, _isBest: true }));
