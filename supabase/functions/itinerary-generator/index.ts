@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+
 Deno.serve(async (req) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -10,11 +12,26 @@ Deno.serve(async (req) => {
 
   try {
     const { params } = await req.json()
-    const apiKey = Deno.env.get('CLAUDE_API_KEY')
+    
+    // Initialize Supabase client to fetch the key from the database
+    // We use the service role key to bypass RLS and fetch the sensitive config
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    if (!apiKey) {
-      throw new Error('CLAUDE_API_KEY is not set in Supabase Secrets')
+    const { data: configData, error: configError } = await supabaseClient
+      .from('ai_config')
+      .select('value')
+      .eq('key', 'CLAUDE_API_KEY')
+      .single()
+
+    if (configError || !configData) {
+      console.error('Database Fetch Error:', configError)
+      throw new Error('Claude API Key not found in database')
     }
+
+    const apiKey = configData.value
 
     const prompt = `
       You are a professional travel consultant and local expert. 
@@ -53,8 +70,8 @@ Deno.serve(async (req) => {
 
     const data = await response.json()
     
-    if (data.error) {
-      throw new Error(data.error.message || 'Claude API Error')
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Claude API returned an error')
     }
 
     const content = data.content[0].text
@@ -63,6 +80,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error: any) {
+    console.error('Function Error:', error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
