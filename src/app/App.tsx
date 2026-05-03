@@ -57,7 +57,10 @@ function AppContent() {
 
       // Let AuthCallbackScreen handle navigation during OAuth redirect;
       // only navigate here for non-callback routes (e.g. email login).
-      if (window.location.pathname === '/auth/callback') return;
+      // Only navigate to home/profile-setup if we are currently on a "guest" page
+      // (Landing or Login). If the user is already deep-linked into the app, stay there.
+      const isGuestPage = ['/', '/login'].includes(window.location.pathname);
+      if (!isGuestPage) return;
 
       if (!user.user_metadata?.full_name) {
         navigateRef.current('/profile-setup', { replace: true });
