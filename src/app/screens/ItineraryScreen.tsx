@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, MapPin, Globe, Calendar, Clock, Heart, ArrowRight, Brain, ShieldCheck, CreditCard, Utensils, Smartphone, Plane } from 'lucide-react';
+import { Sparkles, MapPin, Globe, Calendar, Heart, ArrowRight, Brain, ShieldCheck, CreditCard, Utensils, Smartphone, Plane } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { generateItinerary } from '../../lib/aiApi';

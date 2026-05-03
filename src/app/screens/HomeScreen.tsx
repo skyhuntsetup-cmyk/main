@@ -1,4 +1,4 @@
-import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2 } from 'lucide-react';
+import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2, Brain } from 'lucide-react';
 import { useEffect } from 'react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
