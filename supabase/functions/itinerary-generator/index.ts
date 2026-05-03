@@ -34,8 +34,8 @@ Deno.serve(async (req) => {
     const apiKey = configData.value
 
     const prompt = `
-      You are a professional travel consultant and local expert. 
-      Create a travel plan for:
+      You are a world-class travel architect and cultural expert. 
+      Create a hyper-detailed, destination-specific travel master plan for:
       - Destination: ${params.destination}
       - Nationality: ${params.nationality}
       - Source Country: ${params.sourceCountry}
@@ -43,14 +43,25 @@ Deno.serve(async (req) => {
       - Budget: ${params.budget}
       - Preferences: ${params.preferences}
 
+      CRITICAL REQUIREMENTS:
+      1. DO NOT give generic advice. Mention specific street names, local restaurant names, and precise landmarks.
+      2. WEATHER: Provide a localized weather forecast for the specific dates mentioned (${params.dates}). Suggest specific clothing based on this.
+      3. FOOD: Suggest at least 3 specific "must-try" local dishes and 2-3 specific famous or hidden-gem restaurants/cafes by name.
+      4. ITINERARY: Create a logical flow. If multiple cities are mentioned in the destination, include transit advice between them.
+      5. HACKS: Provide destination-specific money-saving hacks (e.g., specific transit passes, "free entry" days for museums).
+
       Response format (JSON ONLY):
       {
-        "visaInfo": "...",
-        "itinerary": [{"title": "...", "content": "..."}],
-        "hacks": ["..."],
-        "apps": ["..."],
-        "foodInfo": "...",
-        "destinationInfo": "..."
+        "visaInfo": "Visa requirements for ${params.nationality} citizens traveling from ${params.sourceCountry} to ${params.destination}. Include any 'hacks' like e-visa vs on-arrival.",
+        "itinerary": [
+          {"title": "Day 1: [Specific Area Name]", "content": "Detailed plan including specific landmarks and transit tips..."},
+          ...
+        ],
+        "hacks": ["Specific hack 1", "Specific hack 2", ...],
+        "apps": ["Local transit app name", "Local food delivery app", ...],
+        "foodInfo": "Detailed guide on dishes like [Dish Name] and restaurants like [Restaurant Name]...",
+        "weatherInfo": "Forecast for ${params.dates}: [Temperature range], [Conditions]. Advice: [What to pack]...",
+        "destinationInfo": "Brief cultural context and the 'vibe' of the place."
       }
     `
 

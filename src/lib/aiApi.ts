@@ -53,7 +53,8 @@ function getMockItinerary(params: any) {
       "Eat your main meal at lunch to take advantage of 'Set Menu' prices."
     ],
     apps: ["Google Maps (Offline)", "Citymapper", "Google Translate", "Revolut"],
-    foodInfo: "Try the local specialty street food. For authentic versions, look for places with long queues of locals.",
+    foodInfo: "Try the local specialty street food like [Local Dish]. For authentic versions, visit [Famous Restaurant].",
+    weatherInfo: "Expect pleasant weather with temperatures between 15°C and 22°C. Pack light layers and comfortable walking shoes.",
     destinationInfo: "The locals are friendly but appreciate when you learn a few basic phrases in their language."
   };
 }

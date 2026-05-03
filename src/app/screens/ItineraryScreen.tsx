@@ -132,13 +132,23 @@ export function ItineraryScreen() {
           </section>
 
           {/* Food & Culture */}
-          <LiquidGlassCard>
-            <div className="flex items-center gap-2 mb-3 text-[#FF6B6B]">
-              <Utensils size={18} />
-              <h3 className="font-black text-sm uppercase">Cuisines to Try</h3>
-            </div>
-            <p className="text-sm text-[#001F3F]/70 font-medium leading-relaxed">{result.foodInfo}</p>
-          </LiquidGlassCard>
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <LiquidGlassCard className="border-[#FF6B6B]/30">
+              <div className="flex items-center gap-2 mb-3 text-[#FF6B6B]">
+                <Utensils size={18} />
+                <h3 className="font-black text-sm uppercase">Cuisines & Dining</h3>
+              </div>
+              <p className="text-sm text-[#001F3F]/70 font-medium leading-relaxed">{result.foodInfo}</p>
+            </LiquidGlassCard>
+
+            <LiquidGlassCard className="border-[#00F5FF]/30">
+              <div className="flex items-center gap-2 mb-3 text-[#0047AB]">
+                <Globe size={18} />
+                <h3 className="font-black text-sm uppercase">Weather & Packing</h3>
+              </div>
+              <p className="text-sm text-[#001F3F]/70 font-medium leading-relaxed">{result.weatherInfo}</p>
+            </LiquidGlassCard>
+          </section>
 
           <PremiumButton onClick={() => setStep('input')} variant="glass" className="w-full">
             Plan Another Trip
