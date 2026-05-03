@@ -98,7 +98,8 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
         isMonitoring: i === 0,
         fromCode: f.from,
         toCode: f.to,
-        date: f.departureTime?.split('T')[0]
+        date: f.departureTime?.split('T')[0],
+        bookingUrl: f.bookingUrl
       }))
       : mockFlights.map(m => ({
         ...m,
@@ -150,11 +151,8 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   }, [rawDisplayFlights, sortBy, maxPrice, maxStops, selectedAirline]);
 
   const handleBookRedirect = (flight: any) => {
-    // Generate Google Flights deep link as a robust fallback
-    const from = flight.fromCode || 'DEL';
-    const to = flight.toCode || 'LHR';
-    const date = flight.date || new Date().toISOString().split('T')[0];
-    const url = `https://www.google.com/travel/flights/search?tfs=CBwQAhoeagwIAhIHL20vMGRseHISCjIwMjYtMDYtMjZyBwgBEgNMSFJAAVABYAGCAQsI____________AZgBAg&hl=en&curr=INR&f=${from}&t=${to}&d=${date}`;
+    // Priority: 1. API Direct Link, 2. Construct specific search link
+    const url = flight.bookingUrl || `https://www.google.com/travel/flights?q=Flights%20to%20${flight.toCode}%20from%20${flight.fromCode}%20on%20${flight.date}`;
     
     window.open(url, '_blank', 'noopener,noreferrer');
     setBookingFlight(null);

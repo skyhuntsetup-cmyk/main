@@ -140,6 +140,7 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         stopDetails: item.stops > 0 ? `${item.stops} stop${item.stops > 1 ? 's' : ''}` : 'Direct',
         from: params.fromCode,
         to: params.toCode,
+        bookingUrl: item.deeplink || `https://www.google.com/travel/flights?q=Flights%20to%20${params.toCode}%20from%20${params.fromCode}%20on%20${params.departDate}%20one%20way`,
         raw: item,
       } as FlightResult;
     });
