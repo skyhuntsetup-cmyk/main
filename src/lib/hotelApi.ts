@@ -1,3 +1,8 @@
+/**
+ * Booking.com 15 API Wrapper
+ * IMPORTANT: To monetize, append your Affiliate ID (AID) to all 'url' fields 
+ * before presenting them to the user (e.g. &aid=YOUR_ID).
+ */
 import { API_CONFIG } from './flightApi';
 
 const BASE_URL = 'https://booking-com15.p.rapidapi.com/api/v1';

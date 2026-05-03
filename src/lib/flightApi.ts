@@ -1,3 +1,7 @@
+/**
+ * Google Flights 2 API Wrapper
+ * MONETIZATION: Use the 'deeplink' field for direct affiliate conversions.
+ */
 const RAPIDAPI_KEY = import.meta.env.VITE_RAPIDAPI_KEY || '7626b7722emsh4b361da5bafaadcp14f4aejsndea0e27edaf3';
 const RAPIDAPI_HOST = 'google-flights2.p.rapidapi.com';
 const BASE_URL = 'https://google-flights2.p.rapidapi.com/api/v1';
@@ -5,6 +9,10 @@ const BASE_URL = 'https://google-flights2.p.rapidapi.com/api/v1';
 const headers = {
   'x-rapidapi-key': RAPIDAPI_KEY,
   'x-rapidapi-host': RAPIDAPI_HOST,
+};
+
+export const API_CONFIG = {
+  KEY: RAPIDAPI_KEY,
 };
 
 export interface FlightSegment {

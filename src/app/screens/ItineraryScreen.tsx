@@ -4,6 +4,7 @@ import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { generateItinerary } from '../../lib/aiApi';
 import { getVisaRequirement } from '../../lib/visaApi';
+import { getLocationId, searchRestaurants } from '../../lib/attractionApi';
 
 export function ItineraryScreen() {
   const [step, setStep] = useState<'input' | 'loading' | 'result'>('input');
@@ -42,9 +43,18 @@ export function ItineraryScreen() {
       // 1. Fetch Live Visa Data
       setLoadingStep('Accessing global visa regulations...');
       const visaData = await getVisaRequirement(formData.sourceCountry, formData.destination);
-      const extraContext = visaData ? `VISA INFO: ${JSON.stringify(visaData)}` : '';
+      
+      // 2. Fetch Top Restaurants/Attractions
+      setLoadingStep('Scouting the best local dining spots...');
+      const locationId = await getLocationId(formData.destination);
+      const restaurants = locationId ? await searchRestaurants(locationId) : [];
+      
+      const extraContext = `
+        VISA INFO: ${visaData ? JSON.stringify(visaData) : 'Check local embassy.'}
+        TOP RESTAURANTS: ${restaurants && restaurants.length > 0 ? JSON.stringify(restaurants.slice(0, 5)) : 'Suggest famous local spots.'}
+      `;
 
-      // 2. Generate AI Itinerary with Live Data
+      // 3. Generate AI Itinerary with Live Data
       setLoadingStep('Architecting your perfect trip...');
       const data = await generateItinerary({ ...formData, extraContext });
       setResult(data);
