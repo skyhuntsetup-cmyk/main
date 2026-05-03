@@ -7,60 +7,34 @@ export async function generateItinerary(params: {
   preferences: string;
   budget: string;
 }) {
-  const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
-
-  if (!CLAUDE_API_KEY || CLAUDE_API_KEY === 'YOUR_CLAUDE_API_KEY') {
-    // Return mock data if key is missing for demo safety
-    return getMockItinerary(params);
-  }
-
-  const prompt = `
-    You are a professional world-travel consultant and local expert. 
-    Create a highly detailed, premium travel master plan for a traveler with the following details:
-    - Destination: ${params.destination}
-    - Nationality: ${params.nationality}
-    - Source Country: ${params.sourceCountry}
-    - Dates: ${params.dates}
-    - Budget: ${params.budget}
-    - Special Preferences: ${params.preferences}
-
-    Provide the response in the following JSON format ONLY:
-    {
-      "visaInfo": "Detailed visa requirements for ${params.nationality} traveling to ${params.destination}. Include if it's e-visa, on-arrival, or sticker. Mention any hacks to speed up the process.",
-      "itinerary": [
-        {"title": "Morning/Afternoon/Evening focus", "content": "Detailed activities for Day 1"},
-        {"title": "...", "content": "..."}
-      ],
-      "hacks": ["Money saving hack 1", "Travel hack 2", "Secret local spot 3"],
-      "apps": ["App Name 1", "App Name 2"],
-      "foodInfo": "Top 3 local dishes to try and where to find the best authentic versions.",
-      "destinationInfo": "One paragraph of essential cultural context or safety tips."
-    }
-
-    Keep the tone professional, encouraging, and focused on "mastering" the destination.
-  `;
+  // We use a Supabase Edge Function to proxy the request to Claude.
+  // This avoids CORS issues and keeps the API key secure on the server.
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/itinerary-generator`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'dangerously-allow-browser': 'true'
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
       },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20240620',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ params })
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to connect to AI engine');
+    }
+
     const data = await response.json();
-    const content = data.content[0].text;
-    return JSON.parse(content);
-  } catch (error) {
-    console.error('Claude API Error:', error);
+    return data;
+  } catch (error: any) {
+    console.error('AI Generation Error:', error);
+    // Fallback to mock data for demo stability if the function is not configured
+    if (error.message?.includes('not found') || error.message?.includes('404')) {
+      return getMockItinerary(params);
+    }
     throw error;
   }
 }
