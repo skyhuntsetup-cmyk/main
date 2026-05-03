@@ -35,7 +35,7 @@ function AppContent() {
   useEffect(() => { loginRef.current = login; }, [login]);
   useEffect(() => { logoutRef.current = logout; }, [logout]);
 
-  const isInApp = APP_TABS.includes(path as Tab) || path === 'results' || path === 'loading';
+  const isInApp = true;
   const activeTab = (APP_TABS.includes(path as Tab) ? path : 'search') as Tab;
 
   // Set up auth listener exactly ONCE on mount.
@@ -118,7 +118,7 @@ function AppContent() {
         </Routes>
       </div>
 
-      {isInApp && path !== 'results' && (
+      {isInApp && (
         <BottomNav
           activeTab={activeTab}
           onTabChange={(tab) => navigate(`/${tab}`)}

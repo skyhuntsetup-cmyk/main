@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, MapPin, Globe, Calendar, Heart, ArrowRight, Brain, ShieldCheck, CreditCard, Utensils, Smartphone, Plane } from 'lucide-react';
+import { Sparkles, MapPin, Globe, Calendar, Heart, ArrowRight, Brain, ShieldCheck, CreditCard, Utensils, Smartphone, Plane, Info } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { generateItinerary } from '../../lib/aiApi';
@@ -8,6 +8,7 @@ export function ItineraryScreen() {
   const [step, setStep] = useState<'input' | 'loading' | 'result'>('input');
   const [loadingStep, setLoadingStep] = useState('Analyzing destination data...');
   const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     destination: '',
@@ -20,6 +21,7 @@ export function ItineraryScreen() {
   });
 
   const handleGenerate = async () => {
+    setError(null);
     setStep('loading');
     
     // Simulate thinking steps for UX
@@ -39,10 +41,10 @@ export function ItineraryScreen() {
       const data = await generateItinerary(formData);
       setResult(data);
       setStep('result');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || 'Failed to generate itinerary. Please check your AI API key.');
       setStep('input');
-      alert('Failed to generate itinerary. Please check your AI API key.');
     }
   };
 
@@ -156,6 +158,16 @@ export function ItineraryScreen() {
         <h1 className="text-4xl font-black text-[#001F3F] leading-tight">AI Itinerary<br />Master</h1>
         <p className="text-sm text-[#001F3F]/50 font-medium mt-2">Personalized trips, visa hacks & money saving tips.</p>
       </header>
+
+      {error && (
+        <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm font-bold flex items-start gap-3 animate-shake">
+          <Info size={18} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <p>{error}</p>
+            <p className="text-[10px] mt-1 opacity-70">Check console for full technical details</p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         <LiquidGlassCard>
