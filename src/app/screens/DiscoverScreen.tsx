@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Compass, Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap, Brain, Calendar, Globe } from 'lucide-react';
+import { Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap, Brain, Calendar, Globe } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { fetchTrendingDestinations, TrendingDestination } from '../../lib/discoveryApi';
