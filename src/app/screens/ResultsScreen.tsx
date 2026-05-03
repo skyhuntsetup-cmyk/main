@@ -85,17 +85,20 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
       ? apiFlights.map((f, i) => ({
         id: f.id || `flight-${i}`,
         airline: f.airline,
+        airlineLogo: f.airlineLogo,
         departureTime: f.departureTime ? new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
         arrivalTime: f.arrivalTime ? new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
         duration: f.duration || 'N/A',
         stops: f.stopDetails || (f.stops === 0 ? 'Non-stop' : `${f.stops} stop(s)`),
         stopsCount: f.stops,
         price: f.price,
-        savings: i === 0 ? 3200 : 0,
-        rating: 4.5 - (i % 3) * 0.2, // Mock rating logic for display
+        savings: f.isBest ? 4500 : 0,
+        rating: f.isBest ? 4.8 : (4.5 - (i % 3) * 0.2), 
         reviews: 1200 + Math.floor(Math.random() * 1000),
         delay: 0,
         isMonitoring: i === 0,
+        isBest: f.isBest,
+        segments: f.segments,
         fromCode: f.from,
         toCode: f.to,
         date: f.departureTime?.split('T')[0],
@@ -141,7 +144,11 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
       };
       result.sort((a, b) => parseDuration(a.duration) - parseDuration(b.duration));
     } else if (sortBy === 'Best rated') {
-      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      result.sort((a, b) => {
+        if (a.isBest && !b.isBest) return -1;
+        if (!a.isBest && b.isBest) return 1;
+        return (b.rating || 0) - (a.rating || 0);
+      });
     } else if (sortBy === 'Non-stop') {
       result = result.filter(f => f.stopsCount === 0);
       result.sort((a, b) => a.price - b.price);

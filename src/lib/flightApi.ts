@@ -7,6 +7,24 @@ const headers = {
   'x-rapidapi-host': RAPIDAPI_HOST,
 };
 
+export interface FlightSegment {
+  airline: string;
+  airlineLogo?: string;
+  flightNumber?: string;
+  aircraft?: string;
+  departure: {
+    airport: string;
+    code: string;
+    time: string;
+  };
+  arrival: {
+    airport: string;
+    code: string;
+    time: string;
+  };
+  duration?: string;
+}
+
 export interface FlightResult {
   id: string;
   price: number;
@@ -24,6 +42,7 @@ export interface FlightResult {
   flightNumber?: string;
   aircraft?: string;
   isBest?: boolean;
+  segments: FlightSegment[];
   raw?: any;
 }
 
@@ -110,6 +129,24 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
       const mainAirline = firstFlight?.airline || 'Unknown Airline';
       const realStops = Math.max(0, flights.length - 1);
 
+      const segments: FlightSegment[] = flights.map((f: any) => ({
+        airline: f.airline,
+        airlineLogo: f.airline_logo,
+        flightNumber: f.flight_number,
+        aircraft: f.aircraft,
+        departure: {
+          airport: f.departure_airport?.name,
+          code: f.departure_airport?.id,
+          time: formatTime(f.departure_airport?.time),
+        },
+        arrival: {
+          airport: f.arrival_airport?.name,
+          code: f.arrival_airport?.id,
+          time: formatTime(f.arrival_airport?.time),
+        },
+        duration: f.duration?.text,
+      }));
+
       return {
         id: item.booking_token || `flight-${idx}`,
         price: item.price || 0,
@@ -127,6 +164,7 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         flightNumber: firstFlight?.flight_number,
         aircraft: firstFlight?.aircraft,
         isBest: item._isBest,
+        segments,
         raw: item,
       } as FlightResult;
     });
