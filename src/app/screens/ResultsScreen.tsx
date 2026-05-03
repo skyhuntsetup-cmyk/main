@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Filter, ExternalLink, ShieldCheck, AlertTriangle, X } from 'lucide-react';
 import { EnhancedFlightCard } from '../components/EnhancedFlightCard';
 import { PremiumButton } from '../components/PremiumButton';
-import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import type { FlightResult } from '../../lib/flightApi';
 import type { SearchState } from './SearchScreen';
 
