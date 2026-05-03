@@ -21,40 +21,30 @@ export interface FlightResult {
   from: string;
   to: string;
   bookingUrl?: string;
+  flightNumber?: string;
+  aircraft?: string;
+  isBest?: boolean;
   raw?: any;
 }
 
 export interface SearchParams {
   fromCode: string;
   toCode: string;
-  fromEntityId?: string;
-  toEntityId?: string;
-  fromCity?: string;
-  toCity?: string;
   departDate: string;          // YYYY-MM-DD
-  returnDate?: string;         // YYYY-MM-DD (for round trips)
+  returnDate?: string;         // YYYY-MM-DD
   adults?: number;
+  children?: number;
+  infants?: number;
   cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
   currency?: string;
+  searchType?: 'best' | 'cheap';
 }
 
 // Step 1: Search flights using Google Flights API
 export async function searchFlights(params: SearchParams): Promise<FlightResult[]> {
   if (!RAPIDAPI_KEY) {
-    console.error('[FlightAPI] VITE_RAPIDAPI_KEY not set in environment!');
-    return [{
-      id: 'error-key',
-      price: 0,
-      currency: 'USD',
-      airline: 'ERROR: API KEY MISSING in environment',
-      departureTime: params.departDate + 'T00:00:00',
-      arrivalTime: params.departDate + 'T00:00:00',
-      duration: '0h',
-      stops: 0,
-      stopDetails: 'Error',
-      from: params.fromCode,
-      to: params.toCode,
-    }];
+    console.error('[FlightAPI] VITE_RAPIDAPI_KEY not set!');
+    return [];
   }
 
   try {
@@ -70,10 +60,13 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
       arrival_id: params.toCode,
       outbound_date: params.departDate,
       adults: String(params.adults ?? 1),
+      children: String(params.children ?? 0),
+      infants_on_lap: String(params.infants ?? 0),
       travel_class: cabinMap[params.cabinClass || 'economy'],
-      currency: params.currency || 'USD',
-      language_code: 'en-US',
-      country_code: 'US',
+      currency: params.currency || 'INR',
+      language_code: 'en-IN',
+      country_code: 'IN',
+      search_type: params.searchType || 'best',
     });
 
     if (params.returnDate) {
@@ -83,36 +76,25 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
     const res = await fetch(`${BASE_URL}/searchFlights?${queryParams}`, { headers });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = await res.json();
     return parseGoogleFlights(data, params);
   } catch (err: any) {
     console.error('[FlightAPI] searchFlights failed:', err);
-    return [{
-      id: 'error-flight',
-      price: 0,
-      currency: 'USD',
-      airline: `API ERROR: ${err.message}`,
-      departureTime: params.departDate + 'T00:00:00',
-      arrivalTime: params.departDate + 'T00:00:00',
-      duration: '0h',
-      stops: 0,
-      stopDetails: 'Error',
-      from: params.fromCode,
-      to: params.toCode,
-    }];
+    return [];
   }
 }
 
 function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
   try {
     const itineraries = data?.data?.itineraries || {};
-    const allFlights = [...(itineraries.topFlights || []), ...(itineraries.otherFlights || [])];
+    // Merge best and other flights, marking the best ones
+    const topFlights = (itineraries.topFlights || []).map((f: any) => ({ ...f, _isBest: true }));
+    const otherFlights = (itineraries.otherFlights || []).map((f: any) => ({ ...f, _isBest: false }));
+    const allFlights = [...topFlights, ...otherFlights];
 
     if (allFlights.length === 0) return [];
 
     return allFlights.map((item: any, idx: number) => {
-      // time format: "2026-5-27 07:20"
       const formatTime = (timeStr: string) => {
         if (!timeStr) return '';
         const parts = timeStr.split(' ');
@@ -122,17 +104,16 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         return `${formattedDate}T${timePart}:00`;
       };
 
-      const firstFlight = item.flights?.[0];
-      const flightsLen = item.flights?.length || 0;
-      const lastFlight = flightsLen > 0 ? item.flights[flightsLen - 1] : undefined;
+      const flights = item.flights || [];
+      const firstFlight = flights[0];
+      const lastFlight = flights[flights.length - 1];
       const mainAirline = firstFlight?.airline || 'Unknown Airline';
+      const realStops = Math.max(0, flights.length - 1);
 
-      const realStops = Math.max(0, flightsLen - 1);
-      
       return {
         id: item.booking_token || `flight-${idx}`,
         price: item.price || 0,
-        currency: params.currency || 'USD',
+        currency: params.currency || 'INR',
         airline: mainAirline,
         airlineLogo: item.airline_logo || firstFlight?.airline_logo,
         departureTime: formatTime(firstFlight?.departure_airport?.time),
@@ -143,24 +124,15 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         from: params.fromCode,
         to: params.toCode,
         bookingUrl: item.deeplink || `https://www.google.com/travel/flights?q=Flights%20to%20${params.toCode}%20from%20${params.fromCode}%20on%20${params.departDate}%20one%20way`,
+        flightNumber: firstFlight?.flight_number,
+        aircraft: firstFlight?.aircraft,
+        isBest: item._isBest,
         raw: item,
       } as FlightResult;
     });
   } catch (err: any) {
     console.error('[FlightAPI] parseGoogleFlights failed:', err);
-    return [{
-      id: 'error-parse',
-      price: 0,
-      currency: 'USD',
-      airline: `PARSE ERROR: ${err.message}`,
-      departureTime: params.departDate + 'T00:00:00',
-      arrivalTime: params.departDate + 'T00:00:00',
-      duration: '0h',
-      stops: 0,
-      stopDetails: 'Error',
-      from: params.fromCode,
-      to: params.toCode,
-    }];
+    return [];
   }
 }
 

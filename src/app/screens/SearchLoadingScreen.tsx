@@ -150,9 +150,12 @@ export function SearchLoadingScreen() {
         toCity: searchState.to.city,
         departDate: searchState.departDate,
         returnDate: searchState.tripType === 'round-trip' ? searchState.returnDate : undefined,
-        adults: searchState.passengers,
+        adults: searchState.adults,
+        children: searchState.children,
+        infants: searchState.infants,
         cabinClass: cabinMap as any,
-        currency: 'INR'
+        currency: 'INR',
+        searchType: 'best'
       }).then(flights => {
         fetchedFlightsRef.current = flights;
         // Save the best price if found
@@ -278,7 +281,7 @@ export function SearchLoadingScreen() {
             {destination.flag} {destination.city}
           </h1>
           <p className="text-white/60 font-medium mt-1">
-            {searchState?.from?.city} → {destination.city} · {searchState?.passengers || 1} passenger
+            {searchState?.from?.city} → {destination.city} · {(searchState?.adults || 1) + (searchState?.children || 0) + (searchState?.infants || 0)} travelers
           </p>
         </div>
 

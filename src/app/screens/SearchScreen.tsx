@@ -15,7 +15,9 @@ export interface SearchState {
   to: Airport;
   departDate: string;
   returnDate: string;
-  passengers: number;
+  adults: number;
+  children: number;
+  infants: number;
   cabin: string;
   tripType: 'one-way' | 'round-trip';
 }
@@ -52,7 +54,9 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
   const [returnDate, setReturnDate] = useState(
     new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
   );
-  const [passengers, setPassengers] = useState(1);
+  const [adults, setAdults]     = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants]   = useState(0);
   const [cabin, setCabin]           = useState('economy');
 
   const handleSwap = () => {
@@ -62,7 +66,7 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
   };
 
   const handleSearch = () => {
-    onSearch({ from, to, departDate, returnDate, passengers, cabin, tripType });
+    onSearch({ from, to, departDate, returnDate, adults, children, infants, cabin, tripType });
   };
 
   const handlePopularRoute = (fromCode: string, toCode: string) => {
@@ -173,46 +177,74 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
               )}
             </div>
 
-            {/* Passengers */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-1.5">
-                <Users size={12} className="text-[#00F5FF]" /> Passengers
-              </label>
-              <div className="flex items-center gap-3 h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60">
-                <button
-                  onClick={() => setPassengers(Math.max(1, passengers - 1))}
-                  className="w-8 h-8 rounded-lg bg-white/40 font-black text-[#0047AB] hover:bg-white/60 transition-colors text-lg"
-                >−</button>
-                <span className="flex-1 text-center font-black text-[#001F3F]">
-                  {passengers} {passengers === 1 ? 'Adult' : 'Adults'}
-                </span>
-                <button
-                  onClick={() => setPassengers(Math.min(9, passengers + 1))}
-                  className="w-8 h-8 rounded-lg bg-white/40 font-black text-[#0047AB] hover:bg-white/60 transition-colors text-lg"
-                >+</button>
-              </div>
-            </div>
+            {/* Travelers & Cabin */}
+            <div className="space-y-3">
+              <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/60">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users size={16} className="text-[#0047AB]" />
+                  <span className="text-xs font-black text-[#001F3F] uppercase tracking-widest">Travelers</span>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-black text-[#001F3F]">Adults</div>
+                      <div className="text-[10px] text-[#001F3F]/50 font-bold uppercase">Age 12+</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-lg bg-white border border-[#001F3F]/10 flex items-center justify-center font-black text-[#001F3F]">-</button>
+                      <span className="w-4 text-center font-black text-[#001F3F]">{adults}</span>
+                      <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-lg bg-white border border-[#001F3F]/10 flex items-center justify-center font-black text-[#001F3F]">+</button>
+                    </div>
+                  </div>
 
-            {/* Cabin class */}
-            <div>
-              <label className="text-xs font-black text-[#001F3F]/60 uppercase tracking-wide mb-2 block">
-                Cabin Class
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {cabinClasses.map((c) => (
-                  <button
-                    key={c.label}
-                    onClick={() => setCabin(c.value)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      cabin === c.value
-                        ? 'bg-gradient-to-r from-[#0047AB] to-[#00F5FF] text-white shadow-md'
-                        : 'bg-white/30 border-[1.5px] border-white/60 text-[#001F3F]/60 hover:bg-white/50'
-                    }`}
-                  >
-                    <span>{c.icon}</span>
-                    {c.label}
-                  </button>
-                ))}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-black text-[#001F3F]">Children</div>
+                      <div className="text-[10px] text-[#001F3F]/50 font-bold uppercase">Age 2-11</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-lg bg-white border border-[#001F3F]/10 flex items-center justify-center font-black text-[#001F3F]">-</button>
+                      <span className="w-4 text-center font-black text-[#001F3F]">{children}</span>
+                      <button onClick={() => setChildren(children + 1)} className="w-8 h-8 rounded-lg bg-white border border-[#001F3F]/10 flex items-center justify-center font-black text-[#001F3F]">+</button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-black text-[#001F3F]">Infants</div>
+                      <div className="text-[10px] text-[#001F3F]/50 font-bold uppercase">On lap</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button onClick={() => setInfants(Math.max(0, infants - 1))} className="w-8 h-8 rounded-lg bg-white border border-[#001F3F]/10 flex items-center justify-center font-black text-[#001F3F]">-</button>
+                      <span className="w-4 text-center font-black text-[#001F3F]">{infants}</span>
+                      <button onClick={() => setInfants(infants + 1)} className="w-8 h-8 rounded-lg bg-white border border-[#001F3F]/10 flex items-center justify-center font-black text-[#001F3F]">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/60">
+                <div className="flex items-center gap-2 mb-3">
+                  <Plane size={16} className="text-[#0047AB]" />
+                  <span className="text-xs font-black text-[#001F3F] uppercase tracking-widest">Cabin Class</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {cabinClasses.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setCabin(c.value)}
+                      className={`py-3 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                        cabin === c.value
+                          ? 'bg-[#001F3F] text-white border-[#001F3F] shadow-lg'
+                          : 'bg-white/50 border-white/60 text-[#001F3F]/60'
+                      }`}
+                    >
+                      <span className="block text-base mb-1">{c.icon}</span>
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

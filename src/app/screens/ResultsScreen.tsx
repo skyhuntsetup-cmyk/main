@@ -180,7 +180,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
               {searchState ? `${searchState.from.city} → ${searchState.to.city}` : 'Delhi → London'}
             </div>
             <div className="text-xs text-[#001F3F]/50 font-medium">
-              {displayDate} · {searchState?.passengers || 1} passenger{searchState?.passengers !== 1 ? 's' : ''}
+              {displayDate} · {searchState ? (searchState.adults + searchState.children + searchState.infants) : 1} traveler{(searchState ? (searchState.adults + searchState.children + searchState.infants) : 1) !== 1 ? 's' : ''}
             </div>
           </div>
           <div className="px-3 py-1 rounded-xl bg-[#00A854]/10 border border-[#00A854]/20 shadow-sm">
