@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Compass, Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap, Brain } from 'lucide-react';
+import { Compass, Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap, Brain, Calendar, Globe } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { fetchTrendingDestinations, TrendingDestination } from '../../lib/discoveryApi';
 import { fetchLiveDeals, Deal } from '../../lib/dealsApi';
 import { useStore } from '../../store/useStore';
+import { AIRPORTS } from '../../data/airports';
 
 export function DiscoverScreen() {
   const user = useStore(state => state.user);
   const navigate = useNavigate();
-  const homeAirport = user?.homeAirport || 'DEL';
+  const homeAirportCode = user?.homeAirport?.match(/\((\w+)\)/)?.[1] || 'DEL';
+  const cabinPreference = user?.dealPreferences?.cabinClass || 'economy';
   
   const [destinations, setDestinations] = useState<TrendingDestination[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -22,14 +24,19 @@ export function DiscoverScreen() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [destData, dealData] = await Promise.all([
-        fetchTrendingDestinations(),
-        fetchLiveDeals(homeAirport)
-      ]);
+      const destData = await fetchTrendingDestinations();
       setDestinations(destData);
-      setDeals(dealData.flashSales);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load destinations:', err);
+    }
+
+    try {
+      const dealData = await fetchLiveDeals(homeAirportCode);
+      if (dealData && dealData.flashSales) {
+        setDeals(dealData.flashSales);
+      }
+    } catch (err) {
+      console.error('Failed to load deals:', err);
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +46,34 @@ export function DiscoverScreen() {
     loadData();
   }, []);
 
+  const handleTileClick = (dest: TrendingDestination) => {
+    const fromAirport = AIRPORTS.find(a => a.code === homeAirportCode) || AIRPORTS.find(a => a.code === 'DEL')!;
+    const toAirport = AIRPORTS.find(a => a.code === dest.airportCode) || AIRPORTS.find(a => a.code === 'LHR')!;
+    
+    // Set search state and navigate to loading
+    const searchParams = {
+      from: fromAirport,
+      to: toAirport,
+      departDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0], // Default 7 days away
+      returnDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      passengers: 1,
+      cabin: cabinPreference,
+      tripType: 'one-way'
+    };
+
+    navigate('/loading', { state: searchParams });
+  };
+
+  const filteredDestinations = destinations.filter(d => {
+    if (activeCategory === 'Global') return true;
+    if (activeCategory === 'Asia' && d.region === 'Asia') return true;
+    if (activeCategory === 'Europe' && d.region === 'Europe') return true;
+    if (activeCategory === 'Beach' && (d.description.toLowerCase().includes('beach') || d.name === 'Bali')) return true;
+    if (activeCategory === 'Culture' && (d.description.toLowerCase().includes('culture') || d.name === 'Kyoto')) return true;
+    if (activeCategory === 'Luxury' && (d.description.toLowerCase().includes('luxury') || d.name === 'Dubai')) return true;
+    return false;
+  });
+
   return (
     <div className="min-h-screen pb-32">
       {/* Header */}
@@ -46,11 +81,11 @@ export function DiscoverScreen() {
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Compass size={14} className="text-[#0047AB]" />
-              <span className="text-xs font-bold text-[#0047AB] uppercase tracking-widest">Explore the World</span>
+              <Globe size={14} className="text-[#0047AB] animate-spin-slow" />
+              <span className="text-xs font-bold text-[#0047AB] uppercase tracking-widest">Global Explorer</span>
             </div>
             <h1 className="text-3xl font-black text-[#001F3F]">Discover</h1>
-            <p className="text-sm text-[#001F3F]/50 font-medium mt-1">Trending spots and secret deals</p>
+            <p className="text-sm text-[#001F3F]/50 font-medium mt-1">AI-curated gems and secret deals</p>
           </div>
           <button 
             onClick={loadData}
@@ -78,17 +113,18 @@ export function DiscoverScreen() {
 
       {/* AI Itinerary Master CTA */}
       <div className="px-5 mb-8">
-        <LiquidGlassCard hoverable onClick={() => navigate('/itinerary')} className="border-[#0047AB]/20 bg-gradient-to-br from-[#001F3F] to-[#0047AB] text-white">
-          <div className="flex items-center gap-4">
+        <LiquidGlassCard hoverable onClick={() => navigate('/itinerary')} className="border-[#00F5FF]/20 bg-gradient-to-br from-[#001F3F] to-[#0047AB] text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#00F5FF]/10 blur-3xl -mr-16 -mt-16" />
+          <div className="flex items-center gap-4 relative z-10">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg flex-shrink-0">
               <Brain size={22} className="text-[#00F5FF]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-black text-white text-base">AI Itinerary Master</div>
-              <div className="text-sm text-white/70 font-medium">Create a complete trip plan in seconds</div>
+              <div className="text-sm text-white/70 font-medium">Daily plans · Visa hacks · Budget tips</div>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-[#00F5FF]/20 flex items-center justify-center flex-shrink-0">
-              <ArrowRight size={16} className="text-[#00F5FF]" />
+            <div className="px-3 py-1.5 rounded-xl bg-[#00F5FF] text-[#001F3F] text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(0,245,255,0.4)]">
+              Try
             </div>
           </div>
         </LiquidGlassCard>
@@ -96,32 +132,51 @@ export function DiscoverScreen() {
 
       <div className="px-5 space-y-8">
         {/* Featured Card */}
-        {!isLoading && destinations.length > 0 && (
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/80 via-transparent to-transparent z-10 rounded-3xl pointer-events-none" />
+        {!isLoading && filteredDestinations.length > 0 && (
+          <div 
+            onClick={() => handleTileClick(filteredDestinations[0])}
+            className="relative group cursor-pointer"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/90 via-[#001F3F]/20 to-transparent z-10 rounded-3xl pointer-events-none" />
             <img 
-              src={destinations[0].imageUrl} 
-              alt={destinations[0].name}
-              className="w-full h-[450px] object-cover rounded-3xl shadow-xl transition-transform duration-700 group-hover:scale-105"
+              src={filteredDestinations[0].imageUrl} 
+              alt={filteredDestinations[0].name}
+              className="w-full h-[480px] object-cover rounded-3xl shadow-2xl transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute top-4 left-4 z-20">
-              <div className="px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 backdrop-blur-md border border-[#00F5FF]/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+            
+            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+              <div className="px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 backdrop-blur-md border border-[#00F5FF]/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 self-start">
                 <Star size={10} className="fill-[#00F5FF] text-[#00F5FF]" />
-                Featured Spot
+                AI Featured
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <Calendar size={10} className="text-white" />
+                Best in {filteredDestinations[0].bestTime}
               </div>
             </div>
+
             <div className="absolute bottom-6 left-6 right-6 z-20">
               <div className="flex items-center gap-1.5 text-[#00F5FF] font-black text-xs uppercase tracking-widest mb-2">
                 <MapPin size={12} />
-                {destinations[0].region}
+                {filteredDestinations[0].region} · {filteredDestinations[0].airportCode}
               </div>
-              <h2 className="text-4xl font-black text-white mb-2">{destinations[0].name}</h2>
-              <p className="text-white/80 text-sm font-medium line-clamp-2 mb-6 max-w-[80%]">
-                {destinations[0].description}
-              </p>
+              <h2 className="text-4xl font-black text-white mb-2">{filteredDestinations[0].name}</h2>
+              
+              {/* AI Insight Box */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-lg bg-[#00F5FF]/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles size={14} className="text-[#00F5FF]" />
+                  </div>
+                  <p className="text-white/90 text-sm font-medium italic leading-relaxed">
+                    "{filteredDestinations[0].aiInsight}"
+                  </p>
+                </div>
+              </div>
+
               <div className="flex items-center gap-4">
-                <PremiumButton variant="primary" className="flex-1 h-12">
-                  Find Flights <ArrowRight size={18} className="ml-2" />
+                <PremiumButton variant="primary" className="flex-1 h-12 shadow-[0_8px_20px_rgba(0,71,171,0.4)]">
+                   Find Best Flights <ArrowRight size={18} className="ml-2" />
                 </PremiumButton>
                 <button className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 hover:bg-white/40 transition-colors">
                   <Heart size={20} />
@@ -149,14 +204,23 @@ export function DiscoverScreen() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              {destinations.slice(1, 5).map((dest) => (
-                <div key={dest.id} className="relative aspect-[3/4] group overflow-hidden rounded-3xl">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/70 via-transparent to-transparent z-10" />
+              {filteredDestinations.slice(1, 5).map((dest) => (
+                <div 
+                  key={dest.id} 
+                  onClick={() => handleTileClick(dest)}
+                  className="relative aspect-[3/4] group overflow-hidden rounded-3xl cursor-pointer"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/80 via-transparent to-transparent z-10" />
                   <img 
                     src={dest.imageUrl} 
                     alt={dest.name}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
+                  <div className="absolute top-2 right-2 z-20">
+                    <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 text-[8px] font-black text-white uppercase tracking-tighter">
+                      {dest.airportCode}
+                    </div>
+                  </div>
                   <div className="absolute bottom-3 left-3 right-3 z-20">
                     <div className="text-[10px] text-[#00F5FF] font-black uppercase mb-0.5">{dest.country}</div>
                     <div className="text-lg font-black text-white leading-tight mb-1">{dest.name}</div>
@@ -193,7 +257,22 @@ export function DiscoverScreen() {
                         <span className="text-[10px] font-black px-1.5 py-0.5 rounded-lg bg-[#FF6B6B]/10 text-[#FF6B6B]">-{deal.discount}%</span>
                       </div>
                     </div>
-                    <PremiumButton variant="glass" size="small">Details</PremiumButton>
+                    <PremiumButton 
+                      variant="glass" 
+                      size="small"
+                      onClick={() => navigate('/loading', { 
+                        state: { 
+                          from: AIRPORTS.find(a => a.code === deal.from) || AIRPORTS.find(a => a.code === 'DEL')!,
+                          to: AIRPORTS.find(a => a.code === deal.to) || AIRPORTS.find(a => a.code === 'LHR')!,
+                          departDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+                          passengers: 1,
+                          cabin: cabinPreference,
+                          tripType: 'one-way'
+                        } 
+                      })}
+                    >
+                      Book
+                    </PremiumButton>
                   </div>
                 </LiquidGlassCard>
               ))
@@ -202,8 +281,9 @@ export function DiscoverScreen() {
         </section>
 
         {/* Travel Tips Banner */}
-        <LiquidGlassCard className="bg-gradient-to-br from-[#0047AB] to-[#00F5FF] border-none text-white">
-          <div className="flex items-start gap-4">
+        <LiquidGlassCard className="bg-gradient-to-br from-[#0047AB] to-[#00F5FF] border-none text-white relative overflow-hidden">
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mb-24 -mr-24" />
+          <div className="flex items-start gap-4 relative z-10">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0">
               <Info size={24} className="text-white" />
             </div>
