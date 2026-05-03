@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { User, Phone, MapPin, Calendar, Sparkles, Save, Camera, Mail, ShieldCheck } from 'lucide-react';
-import { useStore } from '../../store/useStore';
-import { LiquidGlassCard } from '../components/LiquidGlassCard';
-import { PremiumButton } from '../components/PremiumButton';
+import { useStore } from '../../../store/useStore';
+import { LiquidGlassCard } from '../../components/LiquidGlassCard';
+import { PremiumButton } from '../../components/PremiumButton';
 
 interface ProfilePanelProps {
   onBack: () => void;
 }
 
-export function ProfilePanel({ onBack }: ProfilePanelProps) {
-  const user = useStore((state) => state.user);
-  const updateProfile = useStore((state) => state.updateProfile);
+export function ProfilePanel({ onBack: _onBack }: ProfilePanelProps) {
+  const user = useStore((state: any) => state.user);
+  const updateProfile = useStore((state: any) => state.updateProfile);
   const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState({
