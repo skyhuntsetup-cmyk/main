@@ -127,6 +127,8 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
       const lastFlight = flightsLen > 0 ? item.flights[flightsLen - 1] : undefined;
       const mainAirline = firstFlight?.airline || 'Unknown Airline';
 
+      const realStops = Math.max(0, flightsLen - 1);
+      
       return {
         id: item.booking_token || `flight-${idx}`,
         price: item.price || 0,
@@ -136,8 +138,8 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         departureTime: formatTime(firstFlight?.departure_airport?.time),
         arrivalTime: formatTime(lastFlight?.arrival_airport?.time),
         duration: item.duration?.text || '',
-        stops: item.stops || 0,
-        stopDetails: item.stops > 0 ? `${item.stops} stop${item.stops > 1 ? 's' : ''}` : 'Direct',
+        stops: realStops,
+        stopDetails: realStops > 0 ? `${realStops} stop${realStops > 1 ? 's' : ''}` : 'Direct',
         from: params.fromCode,
         to: params.toCode,
         bookingUrl: item.deeplink || `https://www.google.com/travel/flights?q=Flights%20to%20${params.toCode}%20from%20${params.fromCode}%20on%20${params.departDate}%20one%20way`,
