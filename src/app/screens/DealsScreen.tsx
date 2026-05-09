@@ -155,12 +155,22 @@ export function DealsScreen() {
                       <div className="flex items-start gap-3 mb-3">
                         <span className="text-4xl">{deal.flag}</span>
                         <div className="flex-1">
-                          <div className="font-black text-[#001F3F] text-lg">{deal.from} → {deal.to}</div>
-                          <div className="text-xs text-[#001F3F]/50 font-medium mt-0.5">{deal.departure}</div>
+                          <div className="font-black text-[#001F3F] text-lg">{deal.from} → {deal.toCity}</div>
+                          <div className="text-xs text-[#001F3F]/50 font-medium mt-0.5">
+                            Fly {deal.departure} · {deal.stops === 0 ? 'Direct ✈️' : `${deal.stops} stop${deal.stops > 1 ? 's' : ''}`} · {deal.duration}
+                          </div>
                           <div className="text-xs text-[#001F3F]/40 mt-0.5">{deal.airlines.join(' · ')}</div>
                         </div>
-                        <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF6B6B] to-[#f15959] text-white text-sm font-black flex-shrink-0">
-                          {deal.discount}% OFF
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF6B6B] to-[#f15959] text-white text-sm font-black">
+                            {deal.discount}% OFF
+                          </div>
+                          {deal.tag === 'cheapest_month' && (
+                            <div className="px-2 py-0.5 rounded-lg bg-[#F39C12]/15 text-[#F39C12] text-[10px] font-black">📅 Cheapest This Month</div>
+                          )}
+                          {deal.tag === 'direct' && (
+                            <div className="px-2 py-0.5 rounded-lg bg-[#00A854]/15 text-[#00A854] text-[10px] font-black">✈️ Direct Flight</div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-end gap-3 mb-3">
@@ -182,15 +192,19 @@ export function DealsScreen() {
                             {pad(countdown.h)}h {pad(countdown.m)}m {pad(countdown.s)}s
                           </div>
                         </div>
+                        <div className="ml-auto text-right">
+                          <div className="text-[10px] text-[#001F3F]/40 font-bold uppercase">vs avg price</div>
+                          <div className="text-sm font-black text-[#001F3F]/50">₹{deal.original.toLocaleString('en-IN')}</div>
+                        </div>
                       </div>
                       <div className="flex gap-2">
-                        <PremiumButton variant="glass" className="flex-1">Details</PremiumButton>
-                        <PremiumButton variant="success" className="flex-1"><Zap size={16} />Book Now</PremiumButton>
+                        <PremiumButton variant="glass" className="flex-1" onClick={() => deal.bookingUrl && window.open(deal.bookingUrl, '_blank')}>Details</PremiumButton>
+                        <PremiumButton variant="success" className="flex-1" onClick={() => deal.bookingUrl && window.open(deal.bookingUrl, '_blank')}><Zap size={16} /> Book Now</PremiumButton>
                       </div>
                     </LiquidGlassCard>
                   )) : (
                     <div className="w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
-                      <span className="text-xs font-bold text-[#001F3F]/50">No flash sales found from {homeAirport}. Try refreshing!</span>
+                      <span className="text-xs font-bold text-[#001F3F]/50">No flash deals found from {homeAirport} right now. Try refreshing — deals change hourly!</span>
                     </div>
                   )}
                 </div>
@@ -212,10 +226,11 @@ export function DealsScreen() {
                         <div className="flex-1 min-w-0">
                           <div className="font-black text-[#001F3F] text-sm">{drop.route}</div>
                           <div className="text-lg font-black text-[#0047AB] mt-0.5">₹{drop.price.toLocaleString('en-IN')}</div>
+                          <div className="text-[10px] text-[#001F3F]/40 font-medium">{drop.stops === 0 ? 'Direct ✈️' : `${drop.stops} stop${drop.stops > 1 ? 's' : ''}`}</div>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <div className="text-2xl font-black text-[#00A854]">↓{drop.drop}%</div>
-                          <PremiumButton variant="success" size="small" className="mt-1">View</PremiumButton>
+                          <PremiumButton variant="success" size="small" className="mt-1" onClick={() => drop.bookingUrl && window.open(drop.bookingUrl, '_blank')}>View</PremiumButton>
                         </div>
                       </div>
                     </LiquidGlassCard>
