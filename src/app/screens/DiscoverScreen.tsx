@@ -138,11 +138,16 @@ export function DiscoverScreen() {
             className="relative group cursor-pointer"
           >
             <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/90 via-[#001F3F]/20 to-transparent z-10 rounded-3xl pointer-events-none" />
-            <img 
-              src={filteredDestinations[0].imageUrl} 
-              alt={filteredDestinations[0].name}
-              className="w-full h-[480px] object-cover rounded-3xl shadow-2xl transition-transform duration-700 group-hover:scale-105"
+            <video 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              src={filteredDestinations[0].videoUrl} 
+              poster={filteredDestinations[0].imageUrl}
+              className="absolute inset-0 w-full h-[480px] object-cover rounded-3xl shadow-2xl transition-transform duration-700 group-hover:scale-105"
             />
+            <div className="relative w-full h-[480px]" />
             
             <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
               <div className="px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 backdrop-blur-md border border-[#00F5FF]/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 self-start">
@@ -211,9 +216,13 @@ export function DiscoverScreen() {
                   className="relative aspect-[3/4] group overflow-hidden rounded-3xl cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/80 via-transparent to-transparent z-10" />
-                  <img 
-                    src={dest.imageUrl} 
-                    alt={dest.name}
+                  <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline
+                    src={dest.videoUrl} 
+                    poster={dest.imageUrl}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute top-2 right-2 z-20">
