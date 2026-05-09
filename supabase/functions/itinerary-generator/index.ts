@@ -151,7 +151,13 @@ Deno.serve(async (req) => {
       throw new Error(data.error?.message || 'Claude API returned an error')
     }
 
-    const content = data.content[0].text
+    let content = data.content[0].text;
+    
+    // Robust JSON extraction: strip markdown backticks and potential prefix/suffix text
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      content = jsonMatch[0];
+    }
     
     return new Response(content, {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
