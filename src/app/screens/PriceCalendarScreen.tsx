@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, ArrowLeft, ArrowRight, Plane, TrendingDown, TrendingUp, Minus, Zap, RefreshCw, Brain } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
-import { fetchRouteCalendar, computePriceTrend, getSparklineData, getAIPriceAdvice, RouteCalendar, PriceTrend } from '../../lib/priceHistoryApi';
+import { fetchRouteCalendar, getSparklineData, getAIPriceAdvice, RouteCalendar, PriceTrend } from '../../lib/priceHistoryApi';
 import { useStore } from '../../store/useStore';
 
 const POPULAR_ROUTES = [

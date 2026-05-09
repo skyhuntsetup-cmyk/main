@@ -48,7 +48,9 @@ export async function getAIPriceAdvice(
   const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return computePriceTrend(route, sparkline); // Fallback
+    const fromCode = route.split('→')[0].trim();
+    const toCode = route.split('→')[1].trim();
+    return computePriceTrend(fromCode, toCode, history); // Fallback
   }
 
   try {
