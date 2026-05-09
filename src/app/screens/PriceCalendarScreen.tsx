@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, ArrowLeft, ArrowRight, Plane, TrendingDown, TrendingUp, Minus, Zap, RefreshCw, Brain } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
-import { fetchRouteCalendar, computePriceTrend, getSparklineData, RouteCalendar, PriceTrend } from '../../lib/priceHistoryApi';
+import { fetchRouteCalendar, computePriceTrend, getSparklineData, getAIPriceAdvice, RouteCalendar, PriceTrend } from '../../lib/priceHistoryApi';
 import { useStore } from '../../store/useStore';
 
 const POPULAR_ROUTES = [
@@ -105,7 +105,15 @@ export function PriceCalendarScreen() {
       if (cal.prices.length > 0) {
         const spark = await getSparklineData(from, to, cal.avgPrice);
         setSparkline(spark);
-        const t = computePriceTrend(from, to, spark);
+        
+        // Use AI for better advice
+        const t = await getAIPriceAdvice(
+          `${from} → ${to}`,
+          cal.cheapestPrice,
+          spark,
+          cal.minPrice,
+          cal.avgPrice
+        );
         setTrend(t);
       }
     } catch (err) {

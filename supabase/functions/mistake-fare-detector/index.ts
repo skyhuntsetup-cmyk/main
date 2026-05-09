@@ -57,8 +57,76 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3. (Mock) Insert notifications for users tracking these routes
-    // In a real app, we'd query active alerts and insert push notifications.
+    // 3. Notify users tracking these routes via WhatsApp (Integration)
+    for (const anomaly of detectedAnomalies) {
+      // Generate a catchy AI summary for the deal
+      let aiDealSummary = `🚨 MISTAKE FARE: ${anomaly.route} for ₹${anomaly.price}!`;
+      
+      try {
+        const aiResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/ai-analyst`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+            'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
+          },
+          body: JSON.stringify({
+            task: 'deal-summary',
+            params: { from: anomaly.route.split('->')[0].trim(), to: anomaly.route.split('->')[1].trim(), price: anomaly.price, drop: 50 } // Assume 50% for now
+          })
+        });
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          aiDealSummary = aiData.summary;
+        }
+      } catch (e) {
+        console.error('AI Summary failed, using fallback:', e);
+      }
+
+      // Fetch users tracking this route or with 'pro' tier for general alerts
+      const { data: usersToNotify } = await supabase
+        .from('profiles')
+        .select('phone_number, full_name')
+        .eq('account_tier', 'pro')
+        .not('phone_number', 'is', null);
+
+      if (usersToNotify && usersToNotify.length > 0) {
+        for (const user of usersToNotify) {
+          // Meta Graph API or Twilio WhatsApp API call
+          const whatsappRes = await fetch(`https://graph.facebook.com/v18.0/${Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')}/messages`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('WHATSAPP_API_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: user.phone_number,
+              type: "template",
+              template: {
+                name: "mistake_fare_alert",
+                language: { code: "en_US" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      { type: "text", text: user.full_name },
+                      { type: "text", text: aiDealSummary },
+                      { type: "text", text: `₹${anomaly.price.toLocaleString('en-IN')}` },
+                      { type: "text", text: anomaly.date }
+                    ]
+                  }
+                ]
+              }
+            })
+          });
+          
+          if (!whatsappRes.ok) {
+            console.error(`Failed to send WhatsApp to ${user.phone_number}:`, await whatsappRes.text());
+          }
+        }
+      }
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, Suspense, lazy } from 'react';
+import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { LandingPage } from './screens/LandingPage';
 import { LoginScreen } from './screens/LoginScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -98,6 +99,11 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-[#F0F4F8]">
+      <Helmet>
+        <title>Sky Hunt | AI-Powered Travel & Mistake Fares</title>
+        <meta name="description" content="Discover secret flight deals, mistake fares, and AI-curated travel itineraries with Sky Hunt. Save up to 60% on international flights." />
+      </Helmet>
+
       {/* Global animated background */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-[#F8FAFC] via-[#EDF4FF] to-[#F0F7FF]" />
@@ -140,8 +146,11 @@ function AppContent() {
 
 export function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </HelmetProvider>
   );
 }
+

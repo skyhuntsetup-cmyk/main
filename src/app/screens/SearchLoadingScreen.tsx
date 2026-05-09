@@ -127,6 +127,7 @@ export function SearchLoadingScreen() {
   const [liveAirbnbs, setLiveAirbnbs] = useState<any[] | null>(null);
   const [liveVisa, setLiveVisa] = useState<any>(null);
   const [liveEmbassy, setLiveEmbassy] = useState<any>(null);
+  const [aiTips, setAiTips] = useState<string[] | null>(null);
 
   const destination = searchState?.to || { code: 'LHR', city: 'London', flag: '🇬🇧', country: 'UK' } as any;
   const tips        = getTips(destination.code);
@@ -206,6 +207,24 @@ export function SearchLoadingScreen() {
     }
     fetchVisaDetails(sourceCountry, destCountry, arrivalDate).then(setLiveVisa);
     fetchEmbassyDetails(sourceCountry, destCountry).then(setLiveEmbassy);
+
+    // Fetch AI Travel Tips
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && destination.city) {
+      fetch(`${SUPABASE_URL}/functions/v1/ai-analyst`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          task: 'travel-tips',
+          params: { destination: destination.city, dates: arrivalDate }
+        })
+      }).then(res => res.json()).then(setAiTips).catch(console.error);
+    }
   }, [destination.city, destination.country, searchState?.from?.country, searchState?.departDate, searchState?.returnDate, searchState?.tripType]);
 
   // Redirect to results after duration
@@ -350,7 +369,7 @@ export function SearchLoadingScreen() {
             <span className="text-xs font-black text-[#00F5FF] uppercase tracking-widest">Travel Tip</span>
           </div>
           <p className="text-white/90 text-sm font-medium leading-relaxed transition-all">
-            {tips.tips[tipIndex]}
+            {aiTips ? aiTips[tipIndex % aiTips.length] : tips.tips[tipIndex]}
           </p>
         </div>
 

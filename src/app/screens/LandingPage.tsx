@@ -4,6 +4,7 @@ import { Search, Plane, Cloud, Calendar, Shield, Zap, Brain, ArrowRight } from '
 import { useStore } from '../../store/useStore';
 import { AirportSearch } from '../components/AirportSearch';
 import { AIRPORTS } from '../../data/airports';
+import { fetchLiveDeals } from '../../lib/dealsApi';
 
 interface LandingPageProps {
   onNavigate: (screen: string) => void;
@@ -50,14 +51,27 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
     };
   };
 
-  const deals = [
-    { from: 'NYC', to: 'London', price: 320, flag: '🇬🇧', savings: 45 },
-    { from: 'LA', to: 'Tokyo', price: 450, flag: '🇯🇵', savings: 38 },
-    { from: 'Miami', to: 'Paris', price: 380, flag: '🇫🇷', savings: 52 },
-    { from: 'Chicago', to: 'Dubai', price: 520, flag: '🇦🇪', savings: 41 },
-    { from: 'Seattle', to: 'Singapore', price: 490, flag: '🇸🇬', savings: 35 },
-    { from: 'Boston', to: 'Rome', price: 410, flag: '🇮🇹', savings: 48 }
-  ];
+  const [liveDeals, setLiveDeals] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadDeals() {
+      const { flashSales } = await fetchLiveDeals('DEL');
+      if (flashSales.length > 0) {
+        setLiveDeals(flashSales);
+      } else {
+        // Fallback to mock if no live deals found
+        setLiveDeals([
+          { from: 'NYC', toCity: 'London', price: 320, flag: '🇬🇧', discount: 45 },
+          { from: 'LA', toCity: 'Tokyo', price: 450, flag: '🇯🇵', discount: 38 },
+          { from: 'Miami', toCity: 'Paris', price: 380, flag: '🇫🇷', discount: 52 },
+          { from: 'Chicago', toCity: 'Dubai', price: 520, flag: '🇦🇪', discount: 41 },
+          { from: 'Seattle', toCity: 'Singapore', price: 490, flag: '🇸🇬', discount: 35 },
+          { from: 'Boston', toCity: 'Rome', price: 410, flag: '🇮🇹', discount: 48 }
+        ]);
+      }
+    }
+    loadDeals();
+  }, []);
 
   const features = [
     {
@@ -363,7 +377,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
           </h2>
           <div className="relative overflow-hidden">
             <div className="flex gap-6 animate-[scroll_30s_linear_infinite]">
-              {[...deals, ...deals].map((deal, i) => (
+              {[...liveDeals, ...liveDeals].map((deal, i) => (
                 <div
                   key={i}
                   className="flex-shrink-0 w-80 p-6 rounded-2xl
@@ -380,19 +394,19 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                       <span className="text-4xl">{deal.flag}</span>
                       <div>
                         <div className="font-bold text-[#001F3F] text-lg">
-                          {deal.from} → {deal.to}
+                          {deal.from} → {deal.toCity}
                         </div>
-                        <div className="text-sm text-[#001F3F]/60">Round trip</div>
+                        <div className="text-sm text-[#001F3F]/60">One-way</div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-baseline justify-between">
                     <div className="text-4xl font-bold text-[#00F5FF]">
-                      ${deal.price}
+                      ₹{deal.price.toLocaleString()}
                     </div>
                     <div className="px-3 py-1 rounded-full bg-[#00F5A0]/10 border border-[#00F5A0]/30">
                       <span className="text-sm font-bold text-[#00F5A0]">
-                        Save {deal.savings}%
+                        Save {deal.discount}%
                       </span>
                     </div>
                   </div>
@@ -481,20 +495,21 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                     shadow-[0_-4px_24px_rgba(0,245,255,0.15)]">
         <div className="flex items-center h-full overflow-hidden">
           <div className="flex gap-12 animate-[ticker_40s_linear_infinite] px-8">
-            {[...deals, ...deals, ...deals].map((deal, i) => (
+            {(liveDeals.length > 0 ? [...liveDeals, ...liveDeals, ...liveDeals] : []).map((deal, i) => (
               <div key={i} className="flex items-center gap-3 whitespace-nowrap">
                 <span className="text-2xl">{deal.flag}</span>
                 <span className="font-bold" style={{ color: '#00F5FF' }}>
-                  {deal.from} → {deal.to}
+                  {deal.from} → {deal.toCity || deal.to}
                 </span>
                 <span className="text-white/60">•</span>
-                <span className="text-white font-bold">${deal.price}</span>
+                <span className="text-white font-bold">₹{deal.price.toLocaleString()}</span>
                 <span className="px-2 py-0.5 rounded-full bg-[#00F5A0]/20 text-[#00F5A0] text-xs font-bold">
-                  -{deal.savings}%
+                  -{deal.discount || deal.savings}%
                 </span>
               </div>
             ))}
           </div>
+
         </div>
       </div>
 

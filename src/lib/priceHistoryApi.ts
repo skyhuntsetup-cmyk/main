@@ -37,6 +37,55 @@ export interface PriceTrend {
   color: string;
 }
 
+export async function getAIPriceAdvice(
+  route: string,
+  currentPrice: number,
+  history: number[],
+  minPrice: number,
+  avgPrice: number
+): Promise<PriceTrend> {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return computePriceTrend(route, sparkline); // Fallback
+  }
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-analyst`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        task: 'price-advice',
+        params: { route, currentPrice, history, minPrice, avgPrice }
+      }),
+    });
+
+    if (!response.ok) throw new Error('AI Advice failed');
+    const data = await response.json();
+    
+    return {
+      route,
+      verdict: data.verdict,
+      confidence: data.confidence,
+      detail: data.detail,
+      priceDirection: data.priceDirection,
+      pctChange: 0, // Not provided by AI currently
+      color: data.verdict === 'Book NOW' ? '#E74C3C' : data.verdict === 'Wait' ? '#00A854' : '#F39C12'
+    };
+  } catch (err) {
+    console.error('[AI Advice] Failed:', err);
+    // Fallback to heuristic logic
+    const fromCode = route.split('→')[0].trim();
+    const toCode = route.split('→')[1].trim();
+    return computePriceTrend(fromCode, toCode, history);
+  }
+}
+
 /** Generate the next N departure dates starting from `daysOut` days from today */
 function generateDates(count: number, startDaysOut = 3, stepDays = 3): string[] {
   const dates: string[] = [];

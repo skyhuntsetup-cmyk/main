@@ -3,7 +3,9 @@ import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Filter, ExternalLink, ShieldCheck, AlertTriangle, X } from 'lucide-react';
 import { EnhancedFlightCard } from '../components/EnhancedFlightCard';
 import { PremiumButton } from '../components/PremiumButton';
+import { trackEvent } from '../../lib/analytics';
 import type { FlightResult } from '../../lib/flightApi';
+
 import type { SearchState } from './SearchScreen';
 
 interface ResultsScreenProps {
@@ -168,11 +170,25 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
 
   const handleBookRedirect = (flight: any) => {
     // Priority: 1. API Direct Link, 2. Construct specific search link
-    const url = flight.bookingUrl || `https://www.google.com/travel/flights?q=Flights%20to%20${flight.toCode}%20from%20${flight.fromCode}%20on%20${flight.date}`;
+    let url = flight.bookingUrl;
+    
+    if (!url) {
+      // Fallback: Construct a deep link to Skyscanner (more reliable for global searches)
+      url = `https://www.skyscanner.co.in/transport/flights/${flight.fromCode.toLowerCase()}/${flight.toCode.toLowerCase()}/${flight.date}/`;
+    }
+
+    trackEvent('flight_booking_redirected', {
+      airline: flight.airline,
+      from: flight.fromCode,
+      to: flight.toCode,
+      price: flight.price,
+      isApiLink: !!flight.bookingUrl
+    });
     
     window.open(url, '_blank', 'noopener,noreferrer');
     setBookingFlight(null);
   };
+
 
   const displayDate = searchState?.departDate
     ? new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

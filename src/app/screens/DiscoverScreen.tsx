@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, MapPin, ArrowRight, RefreshCw, Star, Info, Heart, Zap, Brain, Calendar, Globe } from 'lucide-react';
+import { Sparkles, MapPin, ArrowRight, RefreshCw, Info, Heart, Zap, Brain, Calendar, Globe, Cloud } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { fetchTrendingDestinations, TrendingDestination } from '../../lib/discoveryApi';
@@ -17,9 +17,9 @@ export function DiscoverScreen() {
   const [destinations, setDestinations] = useState<TrendingDestination[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('Global');
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  const categories = ['Global', 'Asia', 'Europe', 'Beach', 'Culture', 'Luxury'];
+  const categories = ['All', 'Adventure', 'Relax', 'Culture', 'Luxury', 'Wellness'];
 
   const loadData = async () => {
     setIsLoading(true);
@@ -65,13 +65,8 @@ export function DiscoverScreen() {
   };
 
   const filteredDestinations = destinations.filter(d => {
-    if (activeCategory === 'Global') return true;
-    if (activeCategory === 'Asia' && d.region === 'Asia') return true;
-    if (activeCategory === 'Europe' && d.region === 'Europe') return true;
-    if (activeCategory === 'Beach' && (d.description.toLowerCase().includes('beach') || d.name === 'Bali')) return true;
-    if (activeCategory === 'Culture' && (d.description.toLowerCase().includes('culture') || d.name === 'Kyoto')) return true;
-    if (activeCategory === 'Luxury' && (d.description.toLowerCase().includes('luxury') || d.name === 'Dubai')) return true;
-    return false;
+    if (activeCategory === 'All') return true;
+    return d.mood === activeCategory;
   });
 
   return (
@@ -149,14 +144,26 @@ export function DiscoverScreen() {
             />
             <div className="relative w-full h-[480px]" />
             
-            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+            <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 max-w-[80%]">
               <div className="px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 backdrop-blur-md border border-[#00F5FF]/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 self-start">
-                <Star size={10} className="fill-[#00F5FF] text-[#00F5FF]" />
-                AI Featured
+                <Sparkles size={10} className="text-[#00F5FF]" />
+                {filteredDestinations[0].mood} Choice
               </div>
               <div className="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
                 <Calendar size={10} className="text-white" />
                 Best in {filteredDestinations[0].bestTime}
+              </div>
+              {filteredDestinations[0].weatherForecast && (
+                <div className="px-3 py-1.5 rounded-xl bg-black/30 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                  <Cloud size={10} className="text-[#00F5FF]" />
+                  {filteredDestinations[0].weatherForecast.temp} · {filteredDestinations[0].weatherForecast.condition}
+                </div>
+              )}
+            </div>
+
+            <div className="absolute top-4 right-4 z-20">
+              <div className="px-3 py-1.5 rounded-xl bg-[#00A854]/20 backdrop-blur-md border border-[#00A854]/30 text-white text-[10px] font-black uppercase tracking-widest">
+                {filteredDestinations[0].budgetScore} Budget
               </div>
             </div>
 
@@ -167,15 +174,30 @@ export function DiscoverScreen() {
               </div>
               <h2 className="text-4xl font-black text-white mb-2">{filteredDestinations[0].name}</h2>
               
-              {/* AI Insight Box */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-lg bg-[#00F5FF]/20 flex items-center justify-center flex-shrink-0">
-                    <Sparkles size={14} className="text-[#00F5FF]" />
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {/* AI Insight Box */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Brain size={14} className="text-[#00F5FF]" />
+                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">AI Insight</span>
                   </div>
-                  <p className="text-white/90 text-sm font-medium italic leading-relaxed">
+                  <p className="text-white/90 text-xs font-medium italic leading-relaxed">
                     "{filteredDestinations[0].aiInsight}"
                   </p>
+                </div>
+
+                {/* Local Secret Box */}
+                <div className="bg-gradient-to-br from-[#F39C12]/20 to-[#E67E22]/20 backdrop-blur-md border border-[#F39C12]/30 rounded-2xl p-4 relative group/secret">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Zap size={14} className="text-[#F39C12]" />
+                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Local Secret</span>
+                  </div>
+                  <p className="text-white/90 text-[10px] font-medium leading-relaxed blur-sm group-hover/secret:blur-none transition-all duration-300">
+                    {filteredDestinations[0].localSecret}
+                  </p>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover/secret:opacity-0 transition-opacity">
+                    <span className="text-[9px] font-black text-white uppercase tracking-widest bg-black/40 px-2 py-1 rounded-lg">Hover to Reveal</span>
+                  </div>
                 </div>
               </div>
 
@@ -225,20 +247,29 @@ export function DiscoverScreen() {
                     poster={dest.imageUrl}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
-                  <div className="absolute top-2 right-2 z-20">
+                  <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-1">
                     <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 text-[8px] font-black text-white uppercase tracking-tighter">
                       {dest.airportCode}
                     </div>
+                    {dest.weatherForecast && (
+                      <div className="px-1.5 py-0.5 rounded-md bg-white/20 backdrop-blur-sm text-[7px] font-black text-white uppercase">
+                        {dest.weatherForecast.temp}
+                      </div>
+                    )}
                   </div>
                   <div className="absolute bottom-3 left-3 right-3 z-20">
                     <div className="text-[10px] text-[#00F5FF] font-black uppercase mb-0.5">{dest.country}</div>
                     <div className="text-lg font-black text-white leading-tight mb-1">{dest.name}</div>
-                    <div className="text-[10px] font-bold text-white/60">From ₹{dest.priceStart?.toLocaleString('en-IN')}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-bold text-white/60">From ₹{dest.priceStart?.toLocaleString('en-IN')}</div>
+                      <div className="text-[8px] font-black text-[#00F5FF] uppercase tracking-widest">{dest.budgetScore}</div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
+
         </section>
 
         {/* Exclusive Deals */}

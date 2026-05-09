@@ -5,6 +5,8 @@ import { PremiumButton } from '../components/PremiumButton';
 import { AirportSearch } from '../components/AirportSearch';
 import { type Airport, AIRPORTS } from '../../data/airports';
 import { useStore } from '../../store/useStore';
+import { trackEvent } from '../../lib/analytics';
+
 
 interface SearchScreenProps {
   onSearch: (params: SearchState) => void;
@@ -66,16 +68,27 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
   };
 
   const handleSearch = () => {
+    trackEvent('flight_search_initiated', {
+      from: from.code,
+      to: to.code,
+      departDate,
+      returnDate,
+      adults,
+      cabin,
+      tripType
+    });
     onSearch({ from, to, departDate, returnDate, adults, children, infants, cabin, tripType });
   };
 
   const handlePopularRoute = (fromCode: string, toCode: string) => {
+    trackEvent('popular_route_clicked', { fromCode, toCode });
     const f = AIRPORTS.find(a => a.code === fromCode);
     const t = AIRPORTS.find(a => a.code === toCode);
     if (f) setFrom(f);
     if (t) setTo(t);
     setTimeout(handleSearch, 100);
   };
+
 
   const inputClass = 'w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-semibold text-sm focus:border-[#00F5FF] focus:outline-none focus:shadow-[0_0_0_3px_rgba(0,245,255,0.15)] transition-all appearance-none';
 

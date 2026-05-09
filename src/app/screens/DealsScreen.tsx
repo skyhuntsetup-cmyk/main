@@ -5,7 +5,7 @@ import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { CommunityFeed } from '../components/CommunityFeed';
-import { fetchLiveDeals, Deal, PriceDrop } from '../../lib/dealsApi';
+import { fetchLiveDeals, fetchAnomalyDeals, Deal, PriceDrop } from '../../lib/dealsApi';
 import { getSparklineData, computePriceTrend, PriceTrend } from '../../lib/priceHistoryApi';
 import { useStore } from '../../store/useStore';
 
@@ -35,9 +35,33 @@ export function DealsScreen() {
   const [activeTab, setActiveTab] = useState<'all' | 'flash' | 'drops' | 'pro'>('all');
   const [trends, setTrends] = useState<PriceTrend[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(true);
+  const [liveProDeals, setLiveProDeals] = useState<any[]>(PRO_DEALS);
 
   const loadDeals = async () => {
     setIsLoading(true);
+    
+    // Fetch live anomalies from DB
+    const anomalies = await fetchAnomalyDeals();
+    if (anomalies && anomalies.length > 0) {
+      setLiveProDeals(anomalies.map((a: any) => {
+        const parts = a.route.split(' -> ');
+        return {
+          flag: '🚨',
+          from: parts[0] || 'UNK',
+          to: parts[1] || 'UNK',
+          toCity: parts[1] || 'Unknown',
+          price: a.price,
+          original: a.meanPrice,
+          discount: Math.round(((a.meanPrice - a.price) / a.meanPrice) * 100),
+          departure: a.date,
+          airlines: ['Multiple Airlines'],
+          stops: 1,
+          tag: '🚨 MISTAKE FARE',
+          tagColor: '#FF6B6B'
+        };
+      }));
+    }
+
     const data = await fetchLiveDeals(homeAirport);
     setFlashSales(data.flashSales);
     setPriceDrops(data.priceDrops);
@@ -294,7 +318,7 @@ export function DealsScreen() {
                   )}
                 </div>
                 <div className="space-y-3">
-                  {PRO_DEALS.map((deal, i) => (
+                  {liveProDeals.map((deal, i) => (
                     <div key={i} className="relative">
                       <LiquidGlassCard className="border-[#F39C12]/30">
                         <div className="flex items-start gap-3 mb-2">
@@ -304,7 +328,7 @@ export function DealsScreen() {
                               <span className="text-xs font-black px-2 py-0.5 rounded-lg text-white" style={{ backgroundColor: deal.tagColor }}>{deal.tag}</span>
                             </div>
                             <div className="font-black text-[#001F3F] text-base">{deal.from} → {deal.to}</div>
-                            <div className="text-xs text-[#001F3F]/50">{deal.departure} · {deal.airlines.join(', ')}</div>
+                            <div className="text-xs text-[#001F3F]/50">{deal.departure} · {deal.airlines?.join(', ') || 'Mixed'}</div>
                           </div>
                           <div className="text-right">
                             <div className="text-xl font-black text-[#00A854]">₹{deal.price.toLocaleString('en-IN')}</div>

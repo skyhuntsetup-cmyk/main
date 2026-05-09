@@ -10,22 +10,33 @@ export interface TrendingDestination {
   airportCode: string;
   aiInsight: string;
   bestTime: string;
+  mood: 'Adventure' | 'Relax' | 'Culture' | 'Luxury' | 'Wellness';
+  weatherForecast?: {
+    temp: string;
+    condition: string;
+  };
+  budgetScore: 'Economy' | 'Moderate' | 'Premium';
+  localSecret: string;
 }
 
 export async function fetchTrendingDestinations(): Promise<TrendingDestination[]> {
   try {
-    const trending = [
+    const trending: TrendingDestination[] = [
       { 
         id: '1', 
         name: 'Bali', 
         country: 'Indonesia', 
         region: 'Asia', 
         airportCode: 'DPS',
-        aiInsight: 'Visa hack: Get a VOA (Visa on Arrival) online to skip the 45-min airport queue.',
+        mood: 'Relax',
+        aiInsight: 'Wellness Alert: The Ubud spiritual retreat season peaks in May. Book your sound healing sessions early.',
         bestTime: 'April to October',
         description: 'Tropical paradise with lush jungles, iconic rice terraces, and pristine beaches.', 
-        imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-beautiful-beach-and-the-sea-4309-large.mp4' 
+        imageUrl: '/src/assets/destinations/bali.png',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-beautiful-beach-and-the-sea-4309-large.mp4',
+        weatherForecast: { temp: '28°C', condition: 'Sunny' },
+        budgetScore: 'Economy',
+        localSecret: 'Visit the "Hidden Canyon" in Beji Guwang for a breathtaking trek through narrow rock walls.'
       },
       { 
         id: '2', 
@@ -33,11 +44,15 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         country: 'Greece', 
         region: 'Europe', 
         airportCode: 'JTR',
-        aiInsight: 'Pro tip: Visit Oia at 7 AM to get the famous blue-dome photos without the crowds.',
+        mood: 'Luxury',
+        aiInsight: 'Photo Hack: The most vibrant sunsets are actually from Imerovigli, not Oia, with 80% fewer tourists.',
         bestTime: 'September to October',
         description: 'Breathtaking white-washed buildings perched on volcanic cliffs overlooking the Aegean Sea.', 
-        imageUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036763?auto=format&fit=crop&w=1200&q=80',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-of-the-sea-14-large.mp4' 
+        imageUrl: '/src/assets/destinations/santorini.png',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-of-the-sea-14-large.mp4',
+        weatherForecast: { temp: '22°C', condition: 'Breezy' },
+        budgetScore: 'Premium',
+        localSecret: 'Dine at "Ammoudi Fish Tavern" at the base of the Oia cliffs for the freshest octopus you will ever taste.'
       },
       { 
         id: '3', 
@@ -45,11 +60,15 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         country: 'UAE', 
         region: 'Middle East', 
         airportCode: 'DXB',
-        aiInsight: 'Money hack: Use the Metro "Gold Class" for panoramic views of the skyline for just a few extra Dirhams.',
+        mood: 'Luxury',
+        aiInsight: 'Luxury Tip: The new "Museum of the Future" requires tickets at least 2 weeks in advance.',
         bestTime: 'November to March',
         description: 'A futuristic oasis of luxury shopping, ultramodern architecture, and vibrant nightlife.', 
-        imageUrl: 'https://images.unsplash.com/photo-1512453979798-5eaad0df3e07?auto=format&fit=crop&w=1200&q=80',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-dubai-cityscape-at-night-4228-large.mp4' 
+        imageUrl: '/src/assets/destinations/dubai.png',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-dubai-cityscape-at-night-4228-large.mp4',
+        weatherForecast: { temp: '34°C', condition: 'Clear' },
+        budgetScore: 'Premium',
+        localSecret: 'Take an "Abra" boat ride across the Dubai Creek for just 1 AED to experience the old-world charm.'
       },
       { 
         id: '4', 
@@ -57,35 +76,47 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         country: 'Japan', 
         region: 'Asia', 
         airportCode: 'ITM',
-        aiInsight: 'Cultural tip: Book a morning tea ceremony in Gion 3 weeks in advance for an authentic experience.',
+        mood: 'Culture',
+        aiInsight: 'Cultural Depth: Visit the Arashiyama Bamboo Grove at 6 AM for a meditative experience.',
         bestTime: 'March to May',
-        description: 'The cultural heart of Japan, home to ancient temples, traditional tea houses, and cherry blossoms.', 
+        description: 'The cultural heart of Japan, home to ancient temples and traditional tea houses.', 
         imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-crowds-of-people-walking-on-a-street-in-tokyo-4402-large.mp4' 
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-crowds-of-people-walking-on-a-street-in-tokyo-4402-large.mp4',
+        weatherForecast: { temp: '18°C', condition: 'Cool' },
+        budgetScore: 'Moderate',
+        localSecret: 'The "Path of Philosophy" is most beautiful during sunset when the cherry blossoms glow under the lanterns.'
       },
       { 
         id: '5', 
-        name: 'Paris', 
-        country: 'France', 
+        name: 'Iceland', 
+        country: 'Iceland', 
         region: 'Europe', 
-        airportCode: 'CDG',
-        aiInsight: 'Secret spot: Skip the Eiffel Tower lines; head to the Montparnasse Tower for the best view of the Eiffel itself.',
-        bestTime: 'June to August',
-        description: 'The global center for art, fashion, and gastronomy, famous for the Eiffel Tower and cafes.', 
-        imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-the-eiffel-tower-in-paris-4835-large.mp4' 
+        airportCode: 'KEF',
+        mood: 'Adventure',
+        aiInsight: 'Adventure Alert: The Northern Lights are most active from late September to March.',
+        bestTime: 'September to March',
+        description: 'A land of fire and ice, featuring glaciers, hot springs, and dramatic volcanic landscapes.', 
+        imageUrl: 'https://images.unsplash.com/photo-1476610182048-b716b8518aae?auto=format&fit=crop&w=1200&q=80',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-small-waterfall-in-the-middle-of-the-forest-4444-large.mp4',
+        weatherForecast: { temp: '4°C', condition: 'Snowy' },
+        budgetScore: 'Premium',
+        localSecret: 'Skip the Blue Lagoon; go to the "Secret Lagoon" in Flúðir for a more authentic and quiet experience.'
       },
       { 
         id: '6', 
-        name: 'Amalfi Coast', 
-        country: 'Italy', 
+        name: 'Swiss Alps', 
+        country: 'Switzerland', 
         region: 'Europe', 
-        airportCode: 'NAP',
-        aiInsight: 'Transport hack: The SITA buses are cheap but crowded; take the ferry for the best coastal views.',
-        bestTime: 'May to September',
-        description: 'A 50-kilometer stretch of coastline with sheer cliffs and a rugged shoreline dotted with small beaches.', 
-        imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-driving-on-a-coastal-road-4263-large.mp4' 
+        airportCode: 'ZRH',
+        mood: 'Wellness',
+        aiInsight: 'Wellness Secret: The thermal baths in Vals offer a unique architectural and sensory relaxation experience.',
+        bestTime: 'December to March',
+        description: 'Pristine mountain peaks, crystal-clear lakes, and world-class ski resorts.', 
+        imageUrl: '/src/assets/destinations/swiss.png',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-driving-on-a-coastal-road-4263-large.mp4',
+        weatherForecast: { temp: '-2°C', condition: 'Clear' },
+        budgetScore: 'Premium',
+        localSecret: 'Try the "Fondue in a Gondola" experience in Gstaad for a truly magical alpine meal.'
       }
     ];
 
@@ -98,3 +129,4 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
     return [];
   }
 }
+

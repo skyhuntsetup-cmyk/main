@@ -3,8 +3,11 @@ import { Sparkles, MapPin, Globe, Calendar, Heart, ArrowRight, Brain, ShieldChec
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { generateItinerary } from '../../lib/aiApi';
+import { trackEvent } from '../../lib/analytics';
+
 import { getVisaRequirement } from '../../lib/visaApi';
 import { getLocationId, searchRestaurants } from '../../lib/attractionApi';
+import { MapComponent } from '../components/MapComponent';
 
 function Section({ icon: Icon, title, color, children }: { icon: any; title: string; color: string; children: React.ReactNode }) {
   return (
@@ -136,6 +139,13 @@ function ResultView({ result, onReset }: { result: any; onReset: () => void }) {
             )}
           </LiquidGlassCard>
         </Section>
+
+        {/* Map Visualization */}
+        {result.landmarks?.length > 0 && (
+          <Section icon={Globe} title="Destination Map" color="#0047AB">
+            <MapComponent landmarks={result.landmarks} />
+          </Section>
+        )}
 
         {/* Daily Itinerary */}
         <Section icon={Calendar} title="Day-by-Day Itinerary" color="#0047AB">
@@ -302,6 +312,12 @@ export function ItineraryScreen() {
     if (!formData.destination) return;
     setError(null);
     setStep('loading');
+    trackEvent('itinerary_generation_started', { 
+      destination: formData.destination,
+      duration: formData.duration,
+      budget: formData.budget
+    });
+
 
     try {
       setLoadingStep(`Checking visa for ${formData.nationality} passport...`);

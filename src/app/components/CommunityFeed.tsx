@@ -1,26 +1,76 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Users } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
-const MOCK_COMMUNITY_POSTS = [
-  { id: 1, user: 'Rahul S.', destination: 'London', price: 34500, timeAgo: '2m ago', savings: '₹36,500' },
-  { id: 2, user: 'Priya D.', destination: 'Dubai', price: 14200, timeAgo: '15m ago', savings: '₹8,200' },
-  { id: 3, user: 'Ankit M.', destination: 'Tokyo', price: 28900, timeAgo: '45m ago', savings: '₹43,100' },
-  { id: 4, user: 'Neha K.', destination: 'Bangkok', price: 12500, timeAgo: '1h ago', savings: '₹5,500' },
-];
+interface CommunityPost {
+  id: string;
+  user_name: string;
+  destination: string;
+  price: number;
+  savings: string;
+  user_avatar_initial: string;
+  created_at: string;
+}
 
 export function CommunityFeed() {
-  const [posts, setPosts] = useState(MOCK_COMMUNITY_POSTS);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Rotate feed
+  const fetchPosts = async () => {
+    if (!supabase) return;
+    setIsLoading(true);
+    const { data } = await supabase
+      .from('community_posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    if (data) setPosts(data);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPosts(prev => {
-        const [first, ...rest] = prev;
-        return [...rest, first];
-      });
-    }, 5000);
-    return () => clearInterval(interval);
+    if (!supabase) return;
+    fetchPosts();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('community_posts_realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_posts' }, (payload) => {
+        setPosts(prev => [payload.new as CommunityPost, ...prev].slice(0, 10));
+      })
+      .subscribe();
+
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
+
+
+  // Rotate feed display
+  const [displayIndex, setDisplayIndex] = useState(0);
+  useEffect(() => {
+    if (posts.length <= 3) return;
+    const interval = setInterval(() => {
+      setDisplayIndex(prev => (prev + 1) % posts.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [posts]);
+
+  const visiblePosts = posts.length > 0 
+    ? [...posts, ...posts].slice(displayIndex, displayIndex + 3)
+    : [];
+
+  const getTimeAgo = (dateStr: string) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
 
   return (
     <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/60 p-4 overflow-hidden relative">
@@ -40,26 +90,29 @@ export function CommunityFeed() {
         </div>
       </div>
 
-      <div className="space-y-3 relative">
-        <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white/40 to-transparent z-10" />
-        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white/40 to-transparent z-10" />
-        
-        {posts.slice(0, 3).map((post, i) => (
+      <div className="space-y-3 relative h-[210px]">
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-xl bg-white/20 animate-pulse" />
+          ))
+        ) : visiblePosts.map((post, i) => (
           <div 
             key={`${post.id}-${i}`}
-            className={`flex items-center justify-between p-3 rounded-xl bg-white/60 transition-all duration-500 ease-in-out ${
-              i === 0 ? 'opacity-100 translate-y-0 shadow-sm border border-[#00A854]/20' : 
-              i === 1 ? 'opacity-70 translate-y-0 scale-[0.98]' : 
-              'opacity-30 translate-y-0 scale-[0.95]'
-            }`}
+            className={`flex items-center justify-between p-3 rounded-xl bg-white/60 transition-all duration-700 ease-in-out absolute w-full`}
+            style={{ 
+              top: `${i * 70}px`,
+              opacity: i === 0 ? 1 : i === 1 ? 0.7 : 0.3,
+              transform: `scale(${1 - i * 0.05}) translateY(${i * 4}px)`,
+              zIndex: 3 - i
+            }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#001F3F]/5 flex items-center justify-center border border-[#001F3F]/10 text-xs font-black text-[#001F3F]">
-                {post.user.charAt(0)}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#001F3F]/10 to-[#0047AB]/10 flex items-center justify-center border border-[#001F3F]/10 text-xs font-black text-[#001F3F]">
+                {post.user_avatar_initial}
               </div>
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-[#001F3F]">{post.user}</span>
+                  <span className="text-xs font-bold text-[#001F3F]">{post.user_name}</span>
                   <span className="text-[10px] text-[#001F3F]/50">booked</span>
                 </div>
                 <div className="text-sm font-black text-[#0047AB]">{post.destination}</div>
@@ -70,7 +123,7 @@ export function CommunityFeed() {
                 <CheckCircle2 size={12} />
                 ₹{post.price.toLocaleString('en-IN')}
               </div>
-              <div className="text-[10px] text-[#001F3F]/40 font-bold mt-0.5">{post.timeAgo}</div>
+              <div className="text-[10px] text-[#001F3F]/40 font-bold mt-0.5">{getTimeAgo(post.created_at)}</div>
             </div>
           </div>
         ))}
@@ -78,3 +131,4 @@ export function CommunityFeed() {
     </div>
   );
 }
+

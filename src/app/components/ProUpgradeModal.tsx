@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { X, Zap, Bell, Shield, Brain, Star, Check, Crown } from 'lucide-react';
 import { PremiumButton } from './PremiumButton';
 import { useStore } from '../../store/useStore';
+import { supabase } from '../../lib/supabase';
+import { trackEvent } from '../../lib/analytics';
+
 
 interface ProUpgradeModalProps {
   onClose: () => void;
@@ -16,14 +20,101 @@ const proFeatures = [
 ];
 
 export function ProUpgradeModal({ onClose, trigger }: ProUpgradeModalProps) {
-  const setAccountTier = useStore(state => state.setAccountTier);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const setAccountTier = useStore((state) => state.setAccountTier);
 
-  const handleUpgrade = () => {
-    // In production: redirect to payment gateway (Razorpay/Stripe)
-    // For now, immediately grant Pro access for demo
-    setAccountTier('pro');
-    onClose();
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
   };
+
+  const handleUpgrade = async () => {
+    if (!supabase) {
+      alert('Supabase connection not established.');
+      return;
+    }
+
+    setIsProcessing(true);
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    trackEvent('upgrade_initiated', { trigger, userId: authUser?.id });
+    const res = await loadRazorpay();
+
+    if (!res) {
+      trackEvent('razorpay_sdk_load_failed');
+      alert('Razorpay SDK failed to load. Are you online?');
+      setIsProcessing(false);
+      return;
+    }
+
+    // 1. Create a Razorpay Order via Supabase Edge Function
+    const { data: userRecord } = await supabase.auth.getUser();
+    const user = userRecord.user;
+    if (!user) {
+      alert('Please log in to upgrade');
+      setIsProcessing(false);
+      return;
+    }
+
+    const { data: order, error: orderError } = await supabase.functions.invoke('razorpay-create-order', {
+      body: { userId: user.id, amount: 999 }
+    });
+
+    if (orderError || !order?.id) {
+      console.error('Order Error:', orderError);
+      alert('Failed to create payment order. Using demo mode.');
+      // Fallback for demo if function is not set up with keys
+    }
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourTestKeyHere', 
+      amount: 999 * 100,
+      currency: 'INR',
+      name: 'Sky Hunt',
+      description: 'Sky Hunt Pro - Annual Subscription',
+      image: 'https://skyhunt.com/logo.png',
+      order_id: order?.id, // Use the real order ID if available
+      handler: async function (response: any) {
+        console.log('Payment Success:', response.razorpay_payment_id);
+        trackEvent('upgrade_payment_success', { 
+          paymentId: response.razorpay_payment_id,
+          orderId: order?.id
+        });
+        // The webhook will handle the account tier update, 
+        // but we update locally for immediate UX
+        setAccountTier('pro');
+        onClose();
+      },
+      notes: {
+        userId: user.id
+      },
+      prefill: {
+        name: user.user_metadata?.full_name || 'Sky Hunt User',
+        email: user.email,
+      },
+      theme: {
+        color: '#0047AB',
+      },
+    };
+
+    const paymentObject = new (window as any).Razorpay(options);
+    paymentObject.on('payment.failed', function (response: any) {
+      console.error('Payment Failed:', response.error.description);
+      alert('Payment failed. Please try again.');
+    });
+    
+    paymentObject.open();
+    setIsProcessing(false);
+  };
+
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-[#001F3F]/60 backdrop-blur-md px-4 pb-4 pt-4">
@@ -96,9 +187,9 @@ export function ProUpgradeModal({ onClose, trigger }: ProUpgradeModalProps) {
             <p className="text-xs font-bold text-[#00A854]">7-day no-questions-asked refund guarantee</p>
           </div>
 
-          <PremiumButton variant="primary" size="large" className="w-full mb-3" onClick={handleUpgrade}>
+          <PremiumButton variant="primary" size="large" className="w-full mb-3" onClick={handleUpgrade} disabled={isProcessing}>
             <Crown size={18} className="mr-2" />
-            Upgrade to Pro — ₹999/yr
+            {isProcessing ? 'Processing...' : 'Upgrade to Pro — ₹999/yr'}
           </PremiumButton>
           <button
             onClick={onClose}

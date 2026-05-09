@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       throw new Error('Claude API Key not found in database')
     }
 
-    const apiKey = configData.value
+    const apiKey = configData.value.trim()
 
     const prompt = `
       You are a world-class travel architect and cultural expert. 
@@ -51,22 +51,68 @@ Deno.serve(async (req) => {
       4. ITINERARY: Create a logical flow. If multiple cities are mentioned in the destination, include transit advice between them.
       5. HACKS: Provide destination-specific money-saving hacks (e.g., specific transit passes, "free entry" days for museums).
 
-      Response format (JSON ONLY):
+      Response format MUST BE EXACTLY THIS JSON (Do not include markdown blocks or any other text):
       {
-        "visaInfo": "Visa requirements for ${params.nationality} citizens traveling from ${params.sourceCountry} to ${params.destination}. Include any 'hacks' like e-visa vs on-arrival.",
+        "destination": "${params.destination}",
+        "tripSummary": "A brief engaging summary of the trip...",
+        "visa": {
+          "status": "e.g., e-Visa, Visa on Arrival",
+          "cost": "e.g., USD 25",
+          "processingTime": "e.g., 3-5 days",
+          "validity": "e.g., 30 days",
+          "requirements": ["req1", "req2"],
+          "proTip": "A useful visa tip"
+        },
+        "weather": {
+          "summary": "Short weather summary",
+          "temperature": "e.g., 22°C – 30°C",
+          "conditions": "e.g., Mostly sunny",
+          "packingList": ["item1", "item2"],
+          "avoidItems": ["item1", "item2"]
+        },
         "itinerary": [
-          {"title": "Day 1: [Specific Area Name]", "content": "Detailed plan including specific landmarks and transit tips..."},
-          ...
+          {
+            "day": 1,
+            "theme": "Day theme",
+            "area": "Specific Area Name",
+            "morning": "Detailed morning plan...",
+            "afternoon": "Detailed afternoon plan...",
+            "evening": "Detailed evening plan...",
+            "transit": "Transit tips for the day",
+            "insiderTip": "A cool hack for the day"
+          }
         ],
-        "hacks": ["Specific hack 1", "Specific hack 2", ...],
-        "apps": ["Local transit app name", "Local food delivery app", ...],
-        "foodInfo": "Detailed guide on dishes like [Dish Name] and restaurants like [Restaurant Name]...",
-        "weatherInfo": "Forecast for ${params.dates}: [Temperature range], [Conditions]. Advice: [What to pack]...",
-        "destinationInfo": "Brief cultural context and the 'vibe' of the place."
+        "food": {
+          "mustTryDishes": [
+            {"name": "Dish 1", "description": "Desc...", "whereToTry": "Place name"}
+          ],
+          "topRestaurants": [
+            {"name": "Rest 1", "cuisine": "Local", "priceRange": "₹₹", "knownFor": "Good food", "area": "Downtown"}
+          ],
+          "streetFoodSpots": ["Spot 1", "Spot 2"]
+        },
+        "budget": {
+          "dailyEstimate": "e.g., ₹3,000 – ₹5,000",
+          "flightEstimate": "e.g., ₹20,000",
+          "accommodationEstimate": "e.g., ₹2,500 per night",
+          "hacks": ["hack1", "hack2"]
+        },
+        "logistics": {
+          "gettingThere": "Info...",
+          "localTransport": "Info...",
+          "simCard": "Info...",
+          "currency": "Info...",
+          "mustHaveApps": [
+            {"name": "App1", "purpose": "Navigation"}
+          ]
+        },
+        "landmarks": [
+          {"name": "Place 1", "type": "Museum", "entryFee": "Free", "bestTime": "Morning", "tip": "tip...", "coordinates": {"lat": 0.0, "lng": 0.0}}
+        ]
       }
     `
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    let response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,14 +120,33 @@ Deno.serve(async (req) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4000,
         messages: [{ role: 'user', content: prompt }]
       })
     })
 
-    const data = await response.json()
+    let data = await response.json()
     
+    // Fallback to Haiku 4.5 if Sonnet 4.6 is not found
+    if (!response.ok && data.error?.type === 'not_found_error') {
+      console.warn('Claude Sonnet 4.6 not found, falling back to Claude Haiku 4.5...')
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      })
+      data = await response.json()
+    }
+
     if (!response.ok) {
       throw new Error(data.error?.message || 'Claude API returned an error')
     }

@@ -11,6 +11,7 @@
  */
 
 import { searchFlights, FlightResult } from './flightApi';
+import { supabase } from './supabase';
 
 export interface Deal {
   id: string;
@@ -207,4 +208,19 @@ export async function fetchLiveDeals(
   }
 
   return { flashSales, priceDrops };
+}
+
+export async function fetchAnomalyDeals() {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase.functions.invoke('mistake-fare-detector');
+    if (error) {
+      console.error('Error fetching anomalies:', error);
+      return [];
+    }
+    return data?.anomalies || [];
+  } catch (err) {
+    console.error('Failed to fetch anomaly deals:', err);
+    return [];
+  }
 }
