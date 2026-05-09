@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar, Users, Star, ArrowRight, Loader2, Hotel, Building2, Navigation } from 'lucide-react';
+import { useState } from 'react';
+import { Search, MapPin, Star, Loader2, Hotel, Building2, Navigation } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { searchHotels, resolveDestination } from '../../lib/hotelApi';
