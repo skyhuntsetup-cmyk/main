@@ -17,6 +17,13 @@ export interface TrendingDestination {
   };
   budgetScore: 'Economy' | 'Moderate' | 'Premium';
   localSecret: string;
+  suggestedDays: number;
+  mustVisitPlaces: string[];
+}
+
+export async function fetchDestinationById(id: string): Promise<TrendingDestination | null> {
+  const all = await fetchTrendingDestinations();
+  return all.find(d => d.id === id) || null;
 }
 
 export async function fetchTrendingDestinations(): Promise<TrendingDestination[]> {
@@ -36,7 +43,9 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-beautiful-beach-and-the-sea-4309-large.mp4',
         weatherForecast: { temp: '28°C', condition: 'Sunny' },
         budgetScore: 'Economy',
-        localSecret: 'Visit the "Hidden Canyon" in Beji Guwang for a breathtaking trek through narrow rock walls.'
+        localSecret: 'Visit the "Hidden Canyon" in Beji Guwang for a breathtaking trek through narrow rock walls.',
+        suggestedDays: 7,
+        mustVisitPlaces: ['Ubud Monkey Forest', 'Uluwatu Temple', 'Tegalalang Rice Terrace', 'Nusa Penida']
       },
       { 
         id: '2', 
@@ -52,7 +61,9 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-of-the-sea-14-large.mp4',
         weatherForecast: { temp: '22°C', condition: 'Breezy' },
         budgetScore: 'Premium',
-        localSecret: 'Dine at "Ammoudi Fish Tavern" at the base of the Oia cliffs for the freshest octopus you will ever taste.'
+        localSecret: 'Dine at "Ammoudi Fish Tavern" at the base of the Oia cliffs for the freshest octopus you will ever taste.',
+        suggestedDays: 4,
+        mustVisitPlaces: ['Oia Sunset Point', 'Red Beach', 'Ancient Thera', 'Akrotiri Lighthouse']
       },
       { 
         id: '3', 
@@ -68,7 +79,9 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-dubai-cityscape-at-night-4228-large.mp4',
         weatherForecast: { temp: '34°C', condition: 'Clear' },
         budgetScore: 'Premium',
-        localSecret: 'Take an "Abra" boat ride across the Dubai Creek for just 1 AED to experience the old-world charm.'
+        localSecret: 'Take an "Abra" boat ride across the Dubai Creek for just 1 AED to experience the old-world charm.',
+        suggestedDays: 5,
+        mustVisitPlaces: ['Burj Khalifa', 'Dubai Mall', 'Palm Jumeirah', 'Global Village']
       },
       { 
         id: '4', 
@@ -84,7 +97,9 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-crowds-of-people-walking-on-a-street-in-tokyo-4402-large.mp4',
         weatherForecast: { temp: '18°C', condition: 'Cool' },
         budgetScore: 'Moderate',
-        localSecret: 'The "Path of Philosophy" is most beautiful during sunset when the cherry blossoms glow under the lanterns.'
+        localSecret: 'The "Path of Philosophy" is most beautiful during sunset when the cherry blossoms glow under the lanterns.',
+        suggestedDays: 6,
+        mustVisitPlaces: ['Fushimi Inari Shrine', 'Kinkaku-ji', 'Arashiyama Bamboo Grove', 'Gion District']
       },
       { 
         id: '5', 
@@ -100,7 +115,9 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-small-waterfall-in-the-middle-of-the-forest-4444-large.mp4',
         weatherForecast: { temp: '4°C', condition: 'Snowy' },
         budgetScore: 'Premium',
-        localSecret: 'Skip the Blue Lagoon; go to the "Secret Lagoon" in Flúðir for a more authentic and quiet experience.'
+        localSecret: 'Skip the Blue Lagoon; go to the "Secret Lagoon" in Flúðir for a more authentic and quiet experience.',
+        suggestedDays: 8,
+        mustVisitPlaces: ['Golden Circle', 'Reykjavík', 'Vatnajökull Glacier', 'Skógafoss Waterfall']
       },
       { 
         id: '6', 
@@ -116,7 +133,9 @@ export async function fetchTrendingDestinations(): Promise<TrendingDestination[]
         videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-driving-on-a-coastal-road-4263-large.mp4',
         weatherForecast: { temp: '-2°C', condition: 'Clear' },
         budgetScore: 'Premium',
-        localSecret: 'Try the "Fondue in a Gondola" experience in Gstaad for a truly magical alpine meal.'
+        localSecret: 'Try the "Fondue in a Gondola" experience in Gstaad for a truly magical alpine meal.',
+        suggestedDays: 5,
+        mustVisitPlaces: ['Jungfraujoch', 'Lucerne Lake', 'Mount Pilatus', 'Interlaken']
       }
     ];
 

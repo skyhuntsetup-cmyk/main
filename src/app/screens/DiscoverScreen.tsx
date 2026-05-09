@@ -47,27 +47,24 @@ export function DiscoverScreen() {
   }, []);
 
   const handleTileClick = (dest: TrendingDestination) => {
-    const fromAirport = AIRPORTS.find(a => a.code === homeAirportCode) || AIRPORTS.find(a => a.code === 'DEL')!;
-    const toAirport = AIRPORTS.find(a => a.code === dest.airportCode) || AIRPORTS.find(a => a.code === 'LHR')!;
-    
-    // Set search state and navigate to loading
-    const searchParams = {
-      from: fromAirport,
-      to: toAirport,
-      departDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0], // Default 7 days away
-      returnDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
-      passengers: 1,
-      cabin: cabinPreference,
-      tripType: 'one-way'
-    };
-
-    navigate('/loading', { state: searchParams });
+    navigate(`/discover/${dest.id}`);
   };
 
   const filteredDestinations = destinations.filter(d => {
     if (activeCategory === 'All') return true;
     return d.mood === activeCategory;
   });
+
+  const getMoodColor = (mood: string) => {
+    switch (mood) {
+      case 'Adventure': return 'from-[#FF6B6B] to-[#EE5253]';
+      case 'Relax': return 'from-[#48DBFB] to-[#00D2D3]';
+      case 'Culture': return 'from-[#FDCB6E] to-[#E17055]';
+      case 'Luxury': return 'from-[#A29BFE] to-[#6C5CE7]';
+      case 'Wellness': return 'from-[#55E6C1] to-[#1DD1A1]';
+      default: return 'from-[#0047AB] to-[#001F3F]';
+    }
+  };
 
   return (
     <div className="min-h-screen pb-32">
@@ -128,89 +125,50 @@ export function DiscoverScreen() {
       <div className="px-5 space-y-8">
         {/* Featured Card */}
         {!isLoading && filteredDestinations.length > 0 && (
-          <div 
+          <LiquidGlassCard 
+            hoverable
             onClick={() => handleTileClick(filteredDestinations[0])}
-            className="relative group cursor-pointer"
+            className={`border-none bg-gradient-to-br ${getMoodColor(filteredDestinations[0].mood)} text-white p-6 min-h-[320px] flex flex-col justify-between`}
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/90 via-[#001F3F]/20 to-transparent z-10 rounded-3xl pointer-events-none" />
-            <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-              src={filteredDestinations[0].videoUrl} 
-              poster={filteredDestinations[0].imageUrl}
-              className="absolute inset-0 w-full h-[480px] object-cover rounded-3xl shadow-2xl transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="relative w-full h-[480px]" />
-            
-            <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 max-w-[80%]">
-              <div className="px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 backdrop-blur-md border border-[#00F5FF]/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 self-start">
-                <Sparkles size={10} className="text-[#00F5FF]" />
-                {filteredDestinations[0].mood} Choice
-              </div>
+            <div className="flex flex-wrap gap-2 mb-4">
               <div className="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                <Calendar size={10} className="text-white" />
+                <Sparkles size={10} className="text-white" />
+                Featured {filteredDestinations[0].mood}
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-black/20 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <Calendar size={10} />
                 Best in {filteredDestinations[0].bestTime}
               </div>
-              {filteredDestinations[0].weatherForecast && (
-                <div className="px-3 py-1.5 rounded-xl bg-black/30 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                  <Cloud size={10} className="text-[#00F5FF]" />
-                  {filteredDestinations[0].weatherForecast.temp} · {filteredDestinations[0].weatherForecast.condition}
-                </div>
-              )}
             </div>
 
-            <div className="absolute top-4 right-4 z-20">
-              <div className="px-3 py-1.5 rounded-xl bg-[#00A854]/20 backdrop-blur-md border border-[#00A854]/30 text-white text-[10px] font-black uppercase tracking-widest">
-                {filteredDestinations[0].budgetScore} Budget
-              </div>
-            </div>
-
-            <div className="absolute bottom-6 left-6 right-6 z-20">
-              <div className="flex items-center gap-1.5 text-[#00F5FF] font-black text-xs uppercase tracking-widest mb-2">
+            <div>
+              <div className="flex items-center gap-1.5 text-white/70 font-black text-xs uppercase tracking-widest mb-1">
                 <MapPin size={12} />
                 {filteredDestinations[0].region} · {filteredDestinations[0].airportCode}
               </div>
-              <h2 className="text-4xl font-black text-white mb-2">{filteredDestinations[0].name}</h2>
+              <h2 className="text-4xl font-black text-white mb-4">{filteredDestinations[0].name}</h2>
               
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {/* AI Insight Box */}
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
-                  <div className="flex items-start gap-2 mb-2">
-                    <Brain size={14} className="text-[#00F5FF]" />
-                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">AI Insight</span>
-                  </div>
-                  <p className="text-white/90 text-xs font-medium italic leading-relaxed">
-                    "{filteredDestinations[0].aiInsight}"
-                  </p>
+              <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-6">
+                <div className="flex items-start gap-2 mb-1">
+                  <Brain size={14} className="text-white" />
+                  <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">AI Insight</span>
                 </div>
-
-                {/* Local Secret Box */}
-                <div className="bg-gradient-to-br from-[#F39C12]/20 to-[#E67E22]/20 backdrop-blur-md border border-[#F39C12]/30 rounded-2xl p-4 relative group/secret">
-                  <div className="flex items-start gap-2 mb-2">
-                    <Zap size={14} className="text-[#F39C12]" />
-                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Local Secret</span>
-                  </div>
-                  <p className="text-white/90 text-[10px] font-medium leading-relaxed blur-sm group-hover/secret:blur-none transition-all duration-300">
-                    {filteredDestinations[0].localSecret}
-                  </p>
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover/secret:opacity-0 transition-opacity">
-                    <span className="text-[9px] font-black text-white uppercase tracking-widest bg-black/40 px-2 py-1 rounded-lg">Hover to Reveal</span>
-                  </div>
-                </div>
+                <p className="text-white/90 text-sm font-medium italic leading-relaxed">
+                  "{filteredDestinations[0].aiInsight}"
+                </p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <PremiumButton variant="primary" className="flex-1 h-12 shadow-[0_8px_20px_rgba(0,71,171,0.4)]">
-                   Find Best Flights <ArrowRight size={18} className="ml-2" />
-                </PremiumButton>
-                <button className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 hover:bg-white/40 transition-colors">
-                  <Heart size={20} />
-                </button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-white">₹{filteredDestinations[0].priceStart?.toLocaleString('en-IN')}</span>
+                  <span className="text-xs text-white/60 font-bold uppercase tracking-widest">starting</span>
+                </div>
+                <div className="px-4 py-2 rounded-xl bg-white text-[#001F3F] text-xs font-black uppercase tracking-widest">
+                  Explore
+                </div>
               </div>
             </div>
-          </div>
+          </LiquidGlassCard>
         )}
 
         {/* Trending Grid */}
@@ -226,51 +184,39 @@ export function DiscoverScreen() {
           {isLoading ? (
             <div className="grid grid-cols-2 gap-4">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-64 rounded-3xl bg-white/30 animate-pulse border border-[#001F3F]/5" />
+                <div key={i} className="h-48 rounded-3xl bg-white/30 animate-pulse border border-[#001F3F]/5" />
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {filteredDestinations.slice(1, 5).map((dest) => (
-                <div 
+                <LiquidGlassCard 
                   key={dest.id} 
+                  hoverable
                   onClick={() => handleTileClick(dest)}
-                  className="relative aspect-[3/4] group overflow-hidden rounded-3xl cursor-pointer"
+                  className={`aspect-square p-4 flex flex-col justify-between border-none bg-gradient-to-br ${getMoodColor(dest.mood)} text-white`}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#001F3F]/80 via-transparent to-transparent z-10" />
-                  <video 
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline
-                    src={dest.videoUrl} 
-                    poster={dest.imageUrl}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-1">
-                    <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 text-[8px] font-black text-white uppercase tracking-tighter">
-                      {dest.airportCode}
+                  <div className="flex items-center justify-between">
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                      <MapPin size={14} />
                     </div>
-                    {dest.weatherForecast && (
-                      <div className="px-1.5 py-0.5 rounded-md bg-white/20 backdrop-blur-sm text-[7px] font-black text-white uppercase">
-                        {dest.weatherForecast.temp}
-                      </div>
-                    )}
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/70">{dest.airportCode}</span>
                   </div>
-                  <div className="absolute bottom-3 left-3 right-3 z-20">
-                    <div className="text-[10px] text-[#00F5FF] font-black uppercase mb-0.5">{dest.country}</div>
-                    <div className="text-lg font-black text-white leading-tight mb-1">{dest.name}</div>
+
+                  <div>
+                    <div className="text-[9px] font-black uppercase tracking-tighter text-white/60 mb-0.5">{dest.country}</div>
+                    <div className="text-lg font-black text-white leading-tight mb-2 truncate">{dest.name}</div>
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-bold text-white/60">From ₹{dest.priceStart?.toLocaleString('en-IN')}</div>
-                      <div className="text-[8px] font-black text-[#00F5FF] uppercase tracking-widest">{dest.budgetScore}</div>
+                      <div className="text-[10px] font-bold text-white">₹{Math.floor(dest.priceStart! / 1000)}K+</div>
+                      <ArrowRight size={14} className="text-white/60" />
                     </div>
                   </div>
-                </div>
+                </LiquidGlassCard>
               ))}
             </div>
           )}
-
         </section>
+tion>
 
         {/* Exclusive Deals */}
         <section>

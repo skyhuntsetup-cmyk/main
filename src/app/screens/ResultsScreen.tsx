@@ -83,14 +83,43 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   const [visibleCount, setVisibleCount] = useState(5);
   const [bookingFlight, setBookingFlight] = useState<any>(null);
 
+  const formatTimeStr = (timeVal: any) => {
+    if (!timeVal) return '--:--';
+    
+    // If it's already HH:MM format (common in our mock/api responses)
+    if (typeof timeVal === 'string' && /^\d{2}:\d{2}$/.test(timeVal)) {
+      return timeVal;
+    }
+    
+    const date = new Date(timeVal);
+    
+    // If Date is valid, format it manually to HH:mm for maximum consistency
+    if (!isNaN(date.getTime())) {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+
+    // Last resort: extract anything that looks like time from the string
+    if (typeof timeVal === 'string') {
+      const match = timeVal.match(/(\d{2}:\d{2})/);
+      if (match) return match[1];
+      
+      // If it's a date-only string like "2024-05-15", return a placeholder or just return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(timeVal)) return '--:--';
+    }
+
+    return '--:--'; // Never return "Invalid Date" string
+  };
+
   const rawDisplayFlights = useMemo(() => {
     return apiFlights
       ? apiFlights.map((f, i) => ({
         id: f.id || `flight-${i}`,
         airline: f.airline,
         airlineLogo: f.airlineLogo,
-        departureTime: f.departureTime ? new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
-        arrivalTime: f.arrivalTime ? new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+        departureTime: formatTimeStr(f.departureTime),
+        arrivalTime: formatTimeStr(f.arrivalTime),
         duration: f.duration || 'N/A',
         stops: f.stopDetails || (f.stops === 0 ? 'Non-stop' : `${f.stops} stop(s)`),
         stopsCount: f.stops,
@@ -190,9 +219,12 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   };
 
 
-  const displayDate = searchState?.departDate
-    ? new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : 'May 15, 2026';
+  const displayDate = useMemo(() => {
+    if (!searchState?.departDate) return 'May 15, 2026';
+    const date = new Date(searchState.departDate);
+    if (isNaN(date.getTime())) return searchState.departDate;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }, [searchState?.departDate]);
 
   return (
     <div className="min-h-screen pb-10">

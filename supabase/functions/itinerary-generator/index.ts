@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
       3. FOOD: Suggest at least 3 specific "must-try" local dishes and 2-3 specific famous or hidden-gem restaurants/cafes by name.
       4. ITINERARY: Create a logical flow. If multiple cities are mentioned in the destination, include transit advice between them.
       5. HACKS: Provide destination-specific money-saving hacks (e.g., specific transit passes, "free entry" days for museums).
+      6. CONCISENESS: Be extremely detailed but avoid repetitive filler text. Keep the entire response under 6000 characters.
 
       Response format MUST BE EXACTLY THIS JSON (Do not include markdown blocks or any other text):
       {
@@ -121,7 +122,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{ role: 'user', content: prompt }]
       })
     })
@@ -140,7 +141,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 4000,
+          max_tokens: 8000,
           messages: [{ role: 'user', content: prompt }]
         })
       })
@@ -152,6 +153,9 @@ Deno.serve(async (req) => {
     }
 
     let content = data.content[0].text;
+    console.log('[itinerary-generator] Claude Response Length:', content.length);
+    console.log('[itinerary-generator] Response Start:', content.substring(0, 100));
+    console.log('[itinerary-generator] Response End:', content.substring(content.length - 100));
     
     // Robust JSON extraction: strip markdown backticks and potential prefix/suffix text
     const jsonMatch = content.match(/\{[\s\S]*\}/);

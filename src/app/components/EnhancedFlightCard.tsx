@@ -48,25 +48,36 @@ export function EnhancedFlightCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Helper to format ISO time to HH:mm
-  const formatTime = (isoStr: string) => {
-    if (!isoStr) return 'N/A';
-    try {
-      return new Date(isoStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return isoStr;
+  const formatTime = (timeVal: string) => {
+    if (!timeVal) return 'N/A';
+    if (/^\d{2}:\d{2}$/.test(timeVal)) return timeVal;
+    
+    const date = new Date(timeVal);
+    if (isNaN(date.getTime())) {
+      if (timeVal.includes(' ')) {
+        const timePart = timeVal.split(' ')[1];
+        if (/^\d{2}:\d{2}/.test(timePart)) return timePart.substring(0, 5);
+      }
+      return timeVal || 'N/A';
     }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   };
 
   // Helper to calculate layover between two segments
   const calculateLayover = (arrivalIso: string, departureIso: string) => {
-    try {
-      const diff = new Date(departureIso).getTime() - new Date(arrivalIso).getTime();
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      return `${hours}h ${minutes}m`;
-    } catch {
-      return 'N/A';
+    const arr = new Date(arrivalIso);
+    const dep = new Date(departureIso);
+    
+    if (isNaN(arr.getTime()) || isNaN(dep.getTime())) {
+      return 'Flexible';
     }
+    
+    const diff = dep.getTime() - arr.getTime();
+    if (diff < 0) return 'Flexible';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
   };
 
   return (

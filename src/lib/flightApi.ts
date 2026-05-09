@@ -146,11 +146,30 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
     return allFlights.map((item: any, idx: number) => {
       const formatTime = (timeStr: string) => {
         if (!timeStr) return '';
+        
+        // Handle common API formats
+        // 1. "YYYY-MM-DD HH:MM" or "DD-MM-YYYY HH:MM"
         const parts = timeStr.split(' ');
-        if (parts.length !== 2) return timeStr;
-        const [datePart, timePart] = parts;
-        const formattedDate = datePart.split('-').map(p => p.padStart(2, '0')).join('-');
-        return `${formattedDate}T${timePart}:00`;
+        if (parts.length === 2) {
+          const [datePart, timePart] = parts;
+          const dateUnits = datePart.split(/[-/]/);
+          
+          if (dateUnits.length === 3) {
+            // Check if it's YYYY-MM-DD or DD-MM-YYYY
+            let y, m, d;
+            if (dateUnits[0].length === 4) {
+              [y, m, d] = dateUnits;
+            } else {
+              [d, m, y] = dateUnits;
+            }
+            return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${timePart}:00`;
+          }
+        }
+        
+        // If it's just "HH:MM", keep it as is
+        if (/^\d{1,2}:\d{2}$/.test(timeStr)) return timeStr;
+        
+        return timeStr;
       };
 
       const flights = item.flights || [];

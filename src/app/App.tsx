@@ -20,6 +20,7 @@ const HotelsScreen = lazy(() => import('./screens/HotelsScreen').then(module => 
 const SettingsScreen = lazy(() => import('./screens/SettingsScreen').then(module => ({ default: module.SettingsScreen })));
 const PriceCalendarScreen = lazy(() => import('./screens/PriceCalendarScreen').then(module => ({ default: module.PriceCalendarScreen })));
 const VaultScreen = lazy(() => import('./screens/VaultScreen').then(module => ({ default: module.VaultScreen })));
+const DestinationDetailScreen = lazy(() => import('./screens/DestinationDetailScreen').then(module => ({ default: module.DestinationDetailScreen })));
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 
@@ -124,6 +125,7 @@ function AppContent() {
             <Route path="/alerts" element={<AlertsScreen />} />
             <Route path="/deals" element={<DealsScreen />} />
             <Route path="/discover" element={<DiscoverScreen />} />
+            <Route path="/discover/:id" element={<DestinationDetailScreen />} />
             <Route path="/itinerary" element={<ItineraryScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
             <Route path="/calendar" element={<PriceCalendarScreen />} />
