@@ -1,27 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Flame, TrendingDown, Clock, Zap, Sparkles, RefreshCw, Brain, Lock, Crown, AlertTriangle, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Flame, TrendingDown, Calendar, Clock, Zap, Sparkles, RefreshCw, Brain, Lock, Crown, AlertTriangle, TrendingUp, Minus } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { fetchLiveDeals, Deal, PriceDrop } from '../../lib/dealsApi';
+import { getSparklineData, computePriceTrend, PriceTrend } from '../../lib/priceHistoryApi';
 import { useStore } from '../../store/useStore';
 
 const PRO_DEALS = [
-  { flag: '🇯🇵', from: 'DEL', to: 'TYO', price: 28900, original: 72000, discount: 60, departure: 'Jun 14 – Jun 21', airlines: ['Air India', 'ANA'], tag: '🚨 MISTAKE FARE', tagColor: '#FF6B6B' },
-  { flag: '🇺🇸', from: 'BOM', to: 'JFK', price: 41200, original: 89000, discount: 54, departure: 'Aug 3 – Aug 17', airlines: ['United', 'Air India'], tag: '✈️ Business Class', tagColor: '#8E44AD' },
-  { flag: '🇬🇧', from: 'DEL', to: 'LHR', price: 34500, original: 71000, discount: 51, departure: 'Sep 5 – Sep 19', airlines: ['British Airways'], tag: '🔥 Peak Season Deal', tagColor: '#F39C12' },
+  { flag: '🇯🇵', from: 'DEL', to: 'TYO', toCity: 'Tokyo', price: 28900, original: 72000, discount: 60, departure: 'Jun 14', airlines: ['Air India', 'ANA'], stops: 1, duration: '9h 40m', tag: '🚨 MISTAKE FARE', tagColor: '#FF6B6B' },
+  { flag: '🇺🇸', from: 'BOM', to: 'JFK', toCity: 'New York', price: 41200, original: 89000, discount: 54, departure: 'Aug 3', airlines: ['United', 'Air India'], stops: 1, duration: '16h 20m', tag: '✈️ Business Class', tagColor: '#8E44AD' },
+  { flag: '🇬🇧', from: 'DEL', to: 'LHR', toCity: 'London', price: 34500, original: 71000, discount: 51, departure: 'Sep 5', airlines: ['British Airways'], stops: 0, duration: '9h 05m', tag: '🔥 Peak Season', tagColor: '#F39C12' },
 ];
 
-const AI_PREDICTIONS = [
-  { route: 'India → Europe', verdict: 'Book NOW', confidence: 92, detail: 'Prices rising 8%/week. Best window closes in 72 hours.', color: '#00A854', bg: 'from-[#00A854]/10', icon: TrendingUp },
-  { route: 'India → Southeast Asia', verdict: 'Wait 2 Weeks', confidence: 78, detail: 'Historical data shows a 12% dip mid-month. Patience pays.', color: '#F39C12', bg: 'from-[#F39C12]/10', icon: TrendingDown },
-  { route: 'India → USA', verdict: 'Book NOW', confidence: 85, detail: 'Summer fares locked in. Prices won\'t drop further.', color: '#0047AB', bg: 'from-[#0047AB]/10', icon: TrendingUp },
+const TREND_ROUTES = [
+  { from: 'DEL', to: 'LHR', label: 'India → Europe' },
+  { from: 'DEL', to: 'BKK', label: 'India → SE Asia' },
+  { from: 'DEL', to: 'JFK', label: 'India → USA' },
 ];
 
 export function DealsScreen() {
   const user = useStore(state => state.user);
   const homeAirport = user?.homeAirport?.match(/\((\w+)\)/)?.[1] || user?.homeAirport || 'DEL';
   const isPro = user?.accountTier === 'pro' || user?.accountTier === 'premium';
+  const navigate = useNavigate();
 
   const [countdown, setCountdown] = useState({ h: 6, m: 45, s: 0 });
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +32,8 @@ export function DealsScreen() {
   const [priceDrops, setPriceDrops] = useState<PriceDrop[]>([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'flash' | 'drops' | 'pro'>('all');
+  const [trends, setTrends] = useState<PriceTrend[]>([]);
+  const [trendsLoading, setTrendsLoading] = useState(true);
 
   const loadDeals = async () => {
     setIsLoading(true);
@@ -38,7 +43,20 @@ export function DealsScreen() {
     setIsLoading(false);
   };
 
-  useEffect(() => { loadDeals(); }, [homeAirport]);
+  const loadTrends = async () => {
+    setTrendsLoading(true);
+    const results = await Promise.all(
+      TREND_ROUTES.map(async (r) => {
+        const spark = await getSparklineData(r.from, r.to, 30000);
+        const trend = computePriceTrend(r.from, r.to, spark);
+        return { ...trend, route: r.label };
+      })
+    );
+    setTrends(results);
+    setTrendsLoading(false);
+  };
+
+  useEffect(() => { loadDeals(); loadTrends(); }, [homeAirport]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -111,36 +129,50 @@ export function DealsScreen() {
           <>
             {/* AI Book Now or Wait — always visible */}
             <LiquidGlassCard className="border-[#0047AB]/20 overflow-hidden" pulseIndicator>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center">
-                  <Brain size={20} className="text-white" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0047AB] to-[#00F5FF] flex items-center justify-center">
+                    <Brain size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="font-black text-[#001F3F] text-sm">AI: Book Now or Wait?</div>
+                    <div className="text-xs text-[#001F3F]/40 font-medium">Live trend analysis · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-black text-[#001F3F] text-sm">AI: Book Now or Wait?</div>
-                  <div className="text-xs text-[#001F3F]/40 font-medium">Updated · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
+                <button onClick={() => navigate('/calendar')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0047AB]/8 text-[#0047AB] text-xs font-black border border-[#0047AB]/20">
+                  <Calendar size={12} /> Calendar
+                </button>
               </div>
               <div className="space-y-2.5">
-                {AI_PREDICTIONS.map(({ route, verdict, confidence, detail, color, bg, icon: Icon }) => (
-                  <div key={route} className={`p-3 rounded-2xl bg-gradient-to-r ${bg} to-transparent border border-white/40`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-black text-[#001F3F]">{route}</span>
-                      <div className="flex items-center gap-1.5">
-                        <Icon size={13} style={{ color }} />
-                        <span className="text-xs font-black px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: color }}>
-                          {verdict}
-                        </span>
+                {trendsLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-16 rounded-2xl bg-[#001F3F]/5 animate-pulse" />
+                  ))
+                ) : trends.map((t) => {
+                  const Icon = t.priceDirection === 'rising' ? TrendingUp : t.priceDirection === 'falling' ? TrendingDown : Minus;
+                  const bg = t.verdict === 'Book NOW' ? 'from-[#E74C3C]/8' : t.verdict === 'Wait' ? 'from-[#00A854]/8' : 'from-[#F39C12]/8';
+                  return (
+                    <div key={t.route} className={`p-3 rounded-2xl bg-gradient-to-r ${bg} to-transparent border border-white/40`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-black text-[#001F3F]">{t.route}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Icon size={13} style={{ color: t.color }} />
+                          <span className="text-xs font-black px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: t.color }}>
+                            {t.verdict}
+                          </span>
+                        </div>
                       </div>
+                      <p className="text-xs text-[#001F3F]/60 font-medium">{t.detail}</p>
+                      <div className="mt-2 h-1.5 rounded-full bg-[#001F3F]/8 overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${t.confidence}%`, backgroundColor: t.color }} />
+                      </div>
+                      <div className="text-[10px] text-[#001F3F]/40 font-black mt-1 uppercase tracking-widest">{t.confidence}% Confidence · {t.pctChange > 0 ? '+' : ''}{t.pctChange}% (7d)</div>
                     </div>
-                    <p className="text-xs text-[#001F3F]/60 font-medium">{detail}</p>
-                    <div className="mt-2 h-1.5 rounded-full bg-[#001F3F]/8 overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${confidence}%`, backgroundColor: color }} />
-                    </div>
-                    <div className="text-[10px] text-[#001F3F]/40 font-black mt-1 uppercase tracking-widest">{confidence}% Confidence</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </LiquidGlassCard>
+
 
             {/* Flash Sales */}
             {(activeTab === 'all' || activeTab === 'flash') && (

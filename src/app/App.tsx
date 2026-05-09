@@ -13,6 +13,7 @@ import { DiscoverScreen } from './screens/DiscoverScreen';
 import { ItineraryScreen } from './screens/ItineraryScreen';
 import { HotelsScreen } from './screens/HotelsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { PriceCalendarScreen } from './screens/PriceCalendarScreen';
 import { BottomNav } from './components/BottomNav';
 import { AuthCallbackScreen } from './screens/AuthCallbackScreen';
 import { supabase } from '../lib/supabase';
@@ -115,6 +116,7 @@ function AppContent() {
           <Route path="/discover" element={<DiscoverScreen />} />
           <Route path="/itinerary" element={<ItineraryScreen />} />
           <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/calendar" element={<PriceCalendarScreen />} />
           <Route path="/auth/callback" element={<AuthCallbackScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
