@@ -62,27 +62,27 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
   const features = [
     {
       icon: Brain,
-      title: 'AI Price Prediction',
-      description: 'Neural network forecasts the perfect time to book',
+      title: 'AI Itinerary Master',
+      description: 'Generates daily plans, visa hacks, and personalized travel routes.',
       gradient: 'from-[#00F5FF] to-[#00B8D4]'
     },
     {
-      icon: TrendingDown,
-      title: 'Price Drop Alerts',
-      description: 'Get notified instantly when fares decrease',
-      gradient: 'from-[#00F5A0] to-[#00D9A8]'
+      icon: Zap,
+      title: 'Mistake Fare Detector',
+      description: 'Z-score statistical anomaly engine catches 90% off pricing errors.',
+      gradient: 'from-[#F59E0B] to-[#EF4444]'
     },
     {
       icon: Shield,
-      title: 'Best Price Guarantee',
-      description: 'Find a lower price? We refund the difference',
+      title: 'Smart Document Vault',
+      description: 'Secure, encrypted cloud storage for your passports and visas.',
       gradient: 'from-[#A855F7] to-[#8B5CF6]'
     },
     {
-      icon: Zap,
-      title: 'Instant Booking',
-      description: 'Book in seconds with saved preferences',
-      gradient: 'from-[#F59E0B] to-[#EF4444]'
+      icon: Plane,
+      title: 'Airline Reliability Scores',
+      description: 'Advanced trust metrics to actively filter out low-quality carriers.',
+      gradient: 'from-[#00F5A0] to-[#00D9A8]'
     }
   ];
 
