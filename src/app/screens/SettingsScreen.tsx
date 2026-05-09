@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as SettingsIcon, Award, Search, MapPin, Sparkles, X, Link, Star, Cloud, ChevronLeft, Save } from 'lucide-react';
+import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as SettingsIcon, Award, Search, MapPin, Sparkles, Link, Star, Cloud, ChevronLeft, Save } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
+import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { useStore } from '../../store/useStore';
 import { ProfilePanel } from './settings/ProfilePanel';
 
@@ -10,7 +11,6 @@ export function SettingsScreen() {
   const logout = useStore((state) => state.logout);
   const alerts = useStore((state) => state.alerts);
   const recentSearches = useStore((state) => state.recentSearches);
-  const setAccountTier = useStore((state) => state.setAccountTier);
   const updateProfile = useStore((state) => state.updateProfile);
   
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -314,80 +314,8 @@ export function SettingsScreen() {
         </button>
       </div>
 
-      {/* Upgrade Modal */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#001F3F]/40 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#F0F4F8] rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative">
-            <div className="absolute top-4 right-4 z-10">
-              <button onClick={() => setShowUpgradeModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/50 text-[#001F3F]/50 hover:bg-white/80">
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div className="p-6 pb-0">
-              <h2 className="text-2xl font-black text-[#001F3F] mb-1">Choose Plan</h2>
-              <p className="text-sm text-[#001F3F]/60 font-medium mb-6">Unlock more alerts and premium data sources.</p>
-            </div>
-            
-            <div className="px-6 space-y-4 pb-6 max-h-[60vh] overflow-y-auto no-scrollbar">
-              {/* Free Tier */}
-              <div 
-                onClick={() => { setAccountTier('free'); setShowUpgradeModal(false); }}
-                className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${currentTier === 'free' ? 'border-[#F39C12] bg-white' : 'border-transparent bg-white/60 hover:bg-white'}`}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-black text-[#001F3F] text-lg">Free</div>
-                  <div className="text-sm font-black text-[#001F3F]/40">₹0/mo</div>
-                </div>
-                <ul className="text-sm text-[#001F3F]/60 space-y-1">
-                  <li>• 5 Price Alerts</li>
-                  <li>• Basic Google Flights integration</li>
-                  <li>• Standard UI views</li>
-                </ul>
-              </div>
-
-              {/* Premium Tier */}
-              <div 
-                onClick={() => { setAccountTier('premium'); setShowUpgradeModal(false); }}
-                className={`p-4 rounded-2xl cursor-pointer transition-all border-2 relative ${currentTier === 'premium' ? 'border-[#00A854] bg-[#00A854]/5' : 'border-[#00A854]/20 bg-white/80 hover:bg-[#00A854]/5'}`}
-              >
-                {currentTier === 'premium' && (
-                  <div className="absolute -top-3 left-4 bg-[#00A854] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Current Plan</div>
-                )}
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-black text-[#00A854] text-lg">Premium</div>
-                  <div className="text-sm font-black text-[#00A854]">₹299/mo</div>
-                </div>
-                <ul className="text-sm text-[#001F3F]/70 space-y-1 font-medium">
-                  <li>• 20 Price Alerts</li>
-                  <li>• Full Booking.com integration</li>
-                  <li>• Automated Deal Scraping</li>
-                </ul>
-              </div>
-
-              {/* Pro Tier */}
-              <div 
-                onClick={() => { setAccountTier('pro'); setShowUpgradeModal(false); }}
-                className={`p-4 rounded-2xl cursor-pointer transition-all border-2 relative ${currentTier === 'pro' ? 'border-[#8E44AD] bg-[#8E44AD]/5' : 'border-[#8E44AD]/20 bg-white/80 hover:bg-[#8E44AD]/5'}`}
-              >
-                {currentTier === 'pro' && (
-                  <div className="absolute -top-3 left-4 bg-[#8E44AD] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Current Plan</div>
-                )}
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-black text-[#8E44AD] text-lg">Pro</div>
-                  <div className="text-sm font-black text-[#8E44AD]">₹899/mo</div>
-                </div>
-                <ul className="text-sm text-[#001F3F]/70 space-y-1 font-medium">
-                  <li>• Unlimited Price Alerts</li>
-                  <li>• Airbnb + Amadeus APIs</li>
-                  <li>• Real-time SMS notifications</li>
-                  <li>• Priority AI recommendations</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {showUpgradeModal && <ProUpgradeModal onClose={() => setShowUpgradeModal(false)} />
+      }
     </div>
   );
 }

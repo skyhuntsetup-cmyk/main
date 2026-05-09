@@ -18,8 +18,8 @@ import { AuthCallbackScreen } from './screens/AuthCallbackScreen';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 
-type Tab = 'home' | 'search' | 'hotels' | 'alerts' | 'discover' | 'settings';
-const APP_TABS: Tab[] = ['home', 'search', 'hotels', 'alerts', 'discover', 'settings'];
+type Tab = 'home' | 'search' | 'hotels' | 'deals' | 'alerts' | 'discover' | 'settings';
+const APP_TABS: Tab[] = ['home', 'search', 'hotels', 'deals', 'alerts', 'discover', 'settings'];
 
 function AppContent() {
   const location = useLocation();
