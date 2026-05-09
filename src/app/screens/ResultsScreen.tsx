@@ -64,6 +64,7 @@ const mockFlights = [
     reviews: 2100,
     delay: 0,
     isMonitoring: false,
+    reliabilityScore: 92,
   },
 ];
 
@@ -102,7 +103,8 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
         fromCode: f.from,
         toCode: f.to,
         date: f.departureTime?.split('T')[0],
-        bookingUrl: f.bookingUrl
+        bookingUrl: f.bookingUrl,
+        reliabilityScore: f.reliabilityScore
       }))
       : mockFlights.map(m => ({
         ...m,
@@ -113,7 +115,8 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
         fromCode: searchState?.from?.code || 'DEL',
         toCode: searchState?.to?.code || 'LHR',
         date: searchState?.departDate,
-        bookingUrl: undefined
+        bookingUrl: undefined,
+        reliabilityScore: (m as any).reliabilityScore || 85
       }));
   }, [apiFlights, searchState]);
 
@@ -125,6 +128,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   const [maxPrice, setMaxPrice] = useState(maxPossiblePrice);
   const [maxStops, setMaxStops] = useState<number | null>(null); 
   const [selectedAirline, setSelectedAirline] = useState<string | null>(null);
+  const [minReliability, setMinReliability] = useState<number>(0);
 
   // Sorting and Filtering Logic
   const processedFlights = useMemo(() => {
@@ -132,6 +136,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
       if (f.price > maxPrice) return false;
       if (maxStops !== null && f.stopsCount > maxStops) return false;
       if (selectedAirline && f.airline !== selectedAirline) return false;
+      if (f.reliabilityScore && f.reliabilityScore < minReliability) return false;
       return true;
     });
 
@@ -245,6 +250,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
                 setMaxPrice(maxPossiblePrice);
                 setMaxStops(null);
                 setSelectedAirline(null);
+                setMinReliability(0);
               }}
               className="text-xs font-bold text-[#FF6B6B]"
             >
@@ -304,6 +310,22 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
                   {availableAirlines.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-black text-[#001F3F]/60 uppercase tracking-widest">Min Reliability</span>
+                <span className="text-sm font-black text-[#00A854]">{minReliability}%+</span>
+              </div>
+              <input 
+                type="range" 
+                min={0} 
+                max={99} 
+                step={1}
+                value={minReliability}
+                onChange={(e) => setMinReliability(Number(e.target.value))}
+                className="w-full h-2 bg-[#001F3F]/10 rounded-lg appearance-none cursor-pointer accent-[#00A854]" 
+              />
             </div>
             
             <PremiumButton variant="primary" className="w-full" onClick={() => setShowFilters(false)}>

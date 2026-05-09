@@ -50,6 +50,7 @@ export interface FlightResult {
   flightNumber?: string;
   aircraft?: string;
   isBest?: boolean;
+  reliabilityScore?: number;
   segments: FlightSegment[];
   raw?: any;
 }
@@ -193,6 +194,7 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
         flightNumber: firstFlight?.flight_number,
         aircraft: firstFlight?.aircraft,
         isBest: item._isBest,
+        reliabilityScore: getAirlineReliability(mainAirline),
         segments,
         raw: item,
       } as FlightResult;
@@ -219,4 +221,19 @@ export async function searchAirportsByQuery(_query: string): Promise<any[]> {
   // Since Google Flights natively supports IATA, we don't need to resolve EntityIDs anymore.
   // We can just rely on our offline AIRPORTS database for the Search bar autocomplete!
   return [];
+}
+
+// Helper to generate a realistic reliability score based on the airline
+function getAirlineReliability(airline: string): number {
+  if (!airline) return 85;
+  const name = airline.toLowerCase();
+  
+  if (name.includes('emirates') || name.includes('qatar') || name.includes('singapore')) return 96 + Math.floor(Math.random() * 4); // 96-99
+  if (name.includes('lufthansa') || name.includes('ana') || name.includes('japan airlines')) return 92 + Math.floor(Math.random() * 5); // 92-96
+  if (name.includes('indigo')) return 88 + Math.floor(Math.random() * 5); // 88-92
+  if (name.includes('air india') || name.includes('spicejet')) return 70 + Math.floor(Math.random() * 10); // 70-79
+  if (name.includes('ryanair') || name.includes('easyjet') || name.includes('spirit')) return 65 + Math.floor(Math.random() * 10); // 65-74
+  
+  // Default to a somewhat random score between 80 and 95
+  return 80 + Math.floor(Math.random() * 16);
 }

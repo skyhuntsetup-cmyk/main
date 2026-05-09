@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, Clock, MapPin, Plane, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Clock, MapPin, Plane, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import { LiquidGlassCard } from './LiquidGlassCard';
 import { PremiumButton } from './PremiumButton';
 import { PulsePrice } from './PulsePrice';
@@ -19,6 +19,7 @@ interface EnhancedFlightCardProps {
   delay?: number;
   isMonitoring?: boolean;
   isBest?: boolean;
+  reliabilityScore?: number;
   segments?: FlightSegment[];
   onClick?: () => void;
   onBook?: () => void;
@@ -38,6 +39,7 @@ export function EnhancedFlightCard({
   delay = 0,
   isMonitoring = true,
   isBest = false,
+  reliabilityScore,
   segments = [],
   onClick,
   onBook,
@@ -94,7 +96,15 @@ export function EnhancedFlightCard({
                 <span className="text-white text-xs font-black">{airline.slice(0, 2).toUpperCase()}</span>
               </div>
             )}
-            <span className="font-bold text-[#001F3F]">{airline}</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-[#001F3F]">{airline}</span>
+              {reliabilityScore && (
+                <div className="flex items-center gap-1 text-[10px] text-[#001F3F]/60 font-semibold mt-0.5">
+                  <ShieldCheck size={10} className={reliabilityScore >= 90 ? 'text-[#00A854]' : reliabilityScore >= 80 ? 'text-[#00B8D4]' : 'text-amber-500'} />
+                  {reliabilityScore}/100 Reliability
+                </div>
+              )}
+            </div>
           </div>
           {rating !== undefined && reviews !== undefined && (
             <div className="flex items-center gap-1 text-sm text-[#001F3F]/60">

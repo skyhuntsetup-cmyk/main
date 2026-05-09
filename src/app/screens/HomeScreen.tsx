@@ -1,4 +1,4 @@
-import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2, Brain, Hotel } from 'lucide-react';
+import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2, Brain, Hotel, ShieldCheck } from 'lucide-react';
 import { useEffect } from 'react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
@@ -146,6 +146,22 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00F5FF]/20 text-[#00F5FF] text-[10px] font-black uppercase tracking-widest">
               Top Rated
             </div>
+          </div>
+        </LiquidGlassCard>
+      </div>
+
+      {/* Smart Vault CTA */}
+      <div className="px-5 mb-6">
+        <LiquidGlassCard hoverable onClick={() => onNavigate('vault')} className="border-[#00A854]/20 bg-gradient-to-r from-[#00A854]/10 to-transparent">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00A854] to-[#0047AB] flex items-center justify-center shadow-lg flex-shrink-0">
+              <ShieldCheck size={22} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-[#001F3F] text-base">Smart Document Vault</div>
+              <div className="text-sm text-[#001F3F]/50 font-medium">Auto-sync & expiry alerts</div>
+            </div>
+            <ArrowRight size={20} className="text-[#0047AB]/20" />
           </div>
         </LiquidGlassCard>
       </div>

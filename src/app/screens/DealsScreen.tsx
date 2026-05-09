@@ -4,6 +4,7 @@ import { Flame, TrendingDown, Calendar, Clock, Zap, Sparkles, RefreshCw, Brain, 
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { CommunityFeed } from '../components/CommunityFeed';
 import { fetchLiveDeals, Deal, PriceDrop } from '../../lib/dealsApi';
 import { getSparklineData, computePriceTrend, PriceTrend } from '../../lib/priceHistoryApi';
 import { useStore } from '../../store/useStore';
@@ -173,6 +174,9 @@ export function DealsScreen() {
               </div>
             </LiquidGlassCard>
 
+            <div className="my-6">
+              <CommunityFeed />
+            </div>
 
             {/* Flash Sales */}
             {(activeTab === 'all' || activeTab === 'flash') && (

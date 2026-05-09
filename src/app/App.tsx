@@ -1,21 +1,24 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Suspense, lazy } from 'react';
 import { LandingPage } from './screens/LandingPage';
 import { LoginScreen } from './screens/LoginScreen';
-import { ProfileSetupScreen } from './screens/ProfileSetupScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { SearchScreen } from './screens/SearchScreen';
-import { SearchLoadingScreen } from './screens/SearchLoadingScreen';
-import { ResultsScreen } from './screens/ResultsScreen';
-import { AlertsScreen } from './screens/AlertsScreen';
-import { DealsScreen } from './screens/DealsScreen';
-import { DiscoverScreen } from './screens/DiscoverScreen';
-import { ItineraryScreen } from './screens/ItineraryScreen';
-import { HotelsScreen } from './screens/HotelsScreen';
-import { SettingsScreen } from './screens/SettingsScreen';
-import { PriceCalendarScreen } from './screens/PriceCalendarScreen';
-import { BottomNav } from './components/BottomNav';
 import { AuthCallbackScreen } from './screens/AuthCallbackScreen';
+import { BottomNav } from './components/BottomNav';
+
+// Lazy loaded screens
+const ProfileSetupScreen = lazy(() => import('./screens/ProfileSetupScreen').then(module => ({ default: module.ProfileSetupScreen })));
+const SearchLoadingScreen = lazy(() => import('./screens/SearchLoadingScreen').then(module => ({ default: module.SearchLoadingScreen })));
+const ResultsScreen = lazy(() => import('./screens/ResultsScreen').then(module => ({ default: module.ResultsScreen })));
+const AlertsScreen = lazy(() => import('./screens/AlertsScreen').then(module => ({ default: module.AlertsScreen })));
+const DealsScreen = lazy(() => import('./screens/DealsScreen').then(module => ({ default: module.DealsScreen })));
+const DiscoverScreen = lazy(() => import('./screens/DiscoverScreen').then(module => ({ default: module.DiscoverScreen })));
+const ItineraryScreen = lazy(() => import('./screens/ItineraryScreen').then(module => ({ default: module.ItineraryScreen })));
+const HotelsScreen = lazy(() => import('./screens/HotelsScreen').then(module => ({ default: module.HotelsScreen })));
+const SettingsScreen = lazy(() => import('./screens/SettingsScreen').then(module => ({ default: module.SettingsScreen })));
+const PriceCalendarScreen = lazy(() => import('./screens/PriceCalendarScreen').then(module => ({ default: module.PriceCalendarScreen })));
+const VaultScreen = lazy(() => import('./screens/VaultScreen').then(module => ({ default: module.VaultScreen })));
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 
@@ -102,24 +105,27 @@ function AppContent() {
       </div>
 
       <div className={isInApp ? 'pb-24' : ''}>
-        <Routes>
-          <Route path="/" element={<LandingPage onNavigate={(s) => navigate(`/${s}`)} />} />
-          <Route path="/login" element={<LoginScreen onLoginSuccess={() => navigate('/profile-setup')} />} />
-          <Route path="/profile-setup" element={<ProfileSetupScreen onComplete={() => navigate('/home')} />} />
-          <Route path="/home" element={<HomeScreen onNavigate={(s) => navigate(`/${s}`)} />} />
-          <Route path="/search" element={<SearchScreen onSearch={(params) => navigate('/loading', { state: params })} />} />
-          <Route path="/hotels" element={<HotelsScreen />} />
-          <Route path="/loading" element={<SearchLoadingScreen />} />
-          <Route path="/results" element={<ResultsScreen onBack={() => navigate('/search')} />} />
-          <Route path="/alerts" element={<AlertsScreen />} />
-          <Route path="/deals" element={<DealsScreen />} />
-          <Route path="/discover" element={<DiscoverScreen />} />
-          <Route path="/itinerary" element={<ItineraryScreen />} />
-          <Route path="/settings" element={<SettingsScreen />} />
-          <Route path="/calendar" element={<PriceCalendarScreen />} />
-          <Route path="/auth/callback" element={<AuthCallbackScreen />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#0047AB] font-black">Loading...</div>}>
+          <Routes>
+            <Route path="/" element={<LandingPage onNavigate={(s) => navigate(`/${s}`)} />} />
+            <Route path="/login" element={<LoginScreen onLoginSuccess={() => navigate('/profile-setup')} />} />
+            <Route path="/profile-setup" element={<ProfileSetupScreen onComplete={() => navigate('/home')} />} />
+            <Route path="/home" element={<HomeScreen onNavigate={(s) => navigate(`/${s}`)} />} />
+            <Route path="/search" element={<SearchScreen onSearch={(params) => navigate('/loading', { state: params })} />} />
+            <Route path="/hotels" element={<HotelsScreen />} />
+            <Route path="/loading" element={<SearchLoadingScreen />} />
+            <Route path="/results" element={<ResultsScreen onBack={() => navigate('/search')} />} />
+            <Route path="/alerts" element={<AlertsScreen />} />
+            <Route path="/deals" element={<DealsScreen />} />
+            <Route path="/discover" element={<DiscoverScreen />} />
+            <Route path="/itinerary" element={<ItineraryScreen />} />
+            <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/calendar" element={<PriceCalendarScreen />} />
+            <Route path="/vault" element={<VaultScreen />} />
+            <Route path="/auth/callback" element={<AuthCallbackScreen />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </div>
 
       {isInApp && (
