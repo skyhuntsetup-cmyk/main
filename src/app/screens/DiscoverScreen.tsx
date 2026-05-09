@@ -216,7 +216,6 @@ export function DiscoverScreen() {
             </div>
           )}
         </section>
-tion>
 
         {/* Exclusive Deals */}
         <section>
