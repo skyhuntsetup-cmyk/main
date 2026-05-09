@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plane, Cloud, Calendar, TrendingDown, Shield, Zap, Brain, ArrowRight } from 'lucide-react';
+import { Search, Plane, Cloud, Calendar, Shield, Zap, Brain, ArrowRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { AirportSearch } from '../components/AirportSearch';
 import { AIRPORTS } from '../../data/airports';
