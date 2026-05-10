@@ -64,10 +64,7 @@ export function DestinationDetailScreen() {
   };
 
   const handleHotelSearch = () => {
-    // Navigate to a hotel search or external link
-    // For now, let's say we have a Hotels screen or just open a pre-filled link
-    const query = encodeURIComponent(`${dest.name}, ${dest.country} hotels`);
-    window.open(`https://www.google.com/travel/hotels?q=${query}`, '_blank');
+    navigate('/hotels', { state: { city: dest.name } });
   };
 
   const moodColors: Record<string, string> = {

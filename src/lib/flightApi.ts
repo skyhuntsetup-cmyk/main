@@ -134,8 +134,9 @@ function parseGoogleFlights(data: any, params: SearchParams): FlightResult[] {
     }
     const itineraries = data?.data?.itineraries || {};
     // Merge best and other flights, marking the best ones
-    const topFlights = (itineraries.topFlights || []).map((f: any) => ({ ...f, _isBest: true }));
-    const otherFlights = (itineraries.otherFlights || []).map((f: any) => ({ ...f, _isBest: false }));
+    // Note: API might return snake_case or camelCase depending on version/provider
+    const topFlights = (itineraries.top_flights || itineraries.topFlights || []).map((f: any) => ({ ...f, _isBest: true }));
+    const otherFlights = (itineraries.other_flights || itineraries.otherFlights || []).map((f: any) => ({ ...f, _isBest: false }));
     const allFlights = [...topFlights, ...otherFlights];
 
     if (allFlights.length === 0) {

@@ -113,7 +113,7 @@ export function ResultsScreen({ onBack }: ResultsScreenProps) {
   };
 
   const rawDisplayFlights = useMemo(() => {
-    return apiFlights
+    return (apiFlights && apiFlights.length > 0)
       ? apiFlights.map((f, i) => ({
         id: f.id || `flight-${i}`,
         airline: f.airline,
