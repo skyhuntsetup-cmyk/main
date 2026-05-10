@@ -86,9 +86,30 @@ export async function searchHotels(params: {
   }
 }
 
+// Hardcoded fallbacks for major cities (Booking.com dest_ids)
+const CITY_FALLBACKS: Record<string, { dest_id: string, search_type: string }> = {
+  'hanoi': { dest_id: '-2633053', search_type: 'CITY' },
+  'dubai': { dest_id: '-782831', search_type: 'CITY' },
+  'london': { dest_id: '-2601889', search_type: 'CITY' },
+  'paris': { dest_id: '-1456928', search_type: 'CITY' },
+  'singapore': { dest_id: '-73635', search_type: 'CITY' },
+  'new delhi': { dest_id: '-2106102', search_type: 'CITY' },
+  'new york': { dest_id: '20088325', search_type: 'CITY' },
+  'tokyo': { dest_id: '-246227', search_type: 'CITY' },
+  'bangkok': { dest_id: '-3212344', search_type: 'CITY' },
+  'mumbai': { dest_id: '-2092174', search_type: 'CITY' },
+};
+
 export async function resolveDestination(query: string) {
   if (!query) return null;
+  const normalizedQuery = query.toLowerCase().trim();
   
+  // Check fallback first for reliability
+  if (CITY_FALLBACKS[normalizedQuery]) {
+    console.log(`[HotelAPI] Using fallback for: ${query}`);
+    return CITY_FALLBACKS[normalizedQuery];
+  }
+
   try {
     const response = await fetch(`${BASE_URL}/hotels/searchDestination?query=${encodeURIComponent(query)}`, {
       method: 'GET',
@@ -104,14 +125,31 @@ export async function resolveDestination(query: string) {
     
     if (data.status === false || !data.data || data.data.length === 0) {
       console.warn(`No destination found for: ${query}`);
+      
+      // Secondary fallback: Try to match a substring in our CITY_FALLBACKS
+      const fallbackKey = Object.keys(CITY_FALLBACKS).find(k => normalizedQuery.includes(k) || k.includes(normalizedQuery));
+      if (fallbackKey) return CITY_FALLBACKS[fallbackKey];
+      
       return null;
     }
 
-    // Prefer CITY type if available
-    const cityResult = data.data.find((d: any) => d.search_type === 'CITY');
+    // Logging for debugging
+    console.log(`[HotelAPI] Found ${data.data.length} locations for "${query}"`);
+
+    // Strategy:
+    // 1. Look for exact city name match
+    // 2. Look for search_type === 'CITY'
+    // 3. Fallback to first result
+    
+    const exactMatch = data.data.find((d: any) => d.name?.toLowerCase() === normalizedQuery);
+    if (exactMatch) return exactMatch;
+
+    const cityResult = data.data.find((d: any) => d.search_type === 'CITY' || d.dest_type === 'city');
     return cityResult || data.data[0];
   } catch (error) {
     console.error('Destination Resolution Error:', error);
-    return null;
+    // Final fallback attempt
+    const fallbackKey = Object.keys(CITY_FALLBACKS).find(k => normalizedQuery.includes(k));
+    return fallbackKey ? CITY_FALLBACKS[fallbackKey] : null;
   }
 }
