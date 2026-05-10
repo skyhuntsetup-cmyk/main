@@ -119,10 +119,34 @@ export async function searchFlights(params: SearchParams): Promise<FlightResult[
 
     const data = await res.json();
     console.log('[FlightAPI] Response data:', data);
-    return parseGoogleFlights(data, params);
+    const results = parseGoogleFlights(data, params);
+    
+    // Log prices for history tracking
+    if (results.length > 0) {
+      logFlightPrice(params.fromCode, params.toCode, results[0].price, params.departDate, params.cabinClass || 'economy');
+    }
+
+    return results;
   } catch (err: any) {
     console.error('[FlightAPI] searchFlights failed:', err);
     return [];
+  }
+}
+
+async function logFlightPrice(from: string, to: string, price: number, date: string, cabin: string) {
+  try {
+    const { supabase } = await import('./supabase');
+    if (!supabase) return;
+    await supabase.from('route_price_history').insert({
+      from_code: from,
+      to_code: to,
+      price: Math.round(price),
+      departure_date: date,
+      cabin_class: cabin,
+      sampled_at: new Date().toISOString()
+    });
+  } catch (e) {
+    console.warn('[FlightAPI] Failed to log price:', e);
   }
 }
 

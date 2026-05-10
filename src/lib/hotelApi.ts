@@ -107,7 +107,7 @@ export async function searchHotels(params: {
 
     if (!data.data || !data.data.hotels) return [];
 
-    return data.data.hotels.map((h: any) => ({
+    const results = data.data.hotels.map((h: any) => ({
       hotel_id: h.hotel_id,
       hotel_name: h.hotel_name,
       main_photo_url: h.main_photo_url,
@@ -118,10 +118,34 @@ export async function searchHotels(params: {
       distance: h.distance_from_city_center,
       url: h.url
     }));
+
+    // Log prices for history tracking
+    if (results.length > 0) {
+      logHotelPrice(params.dest_id, results[0].hotel_name, results[0].price, params.arrival_date, params.departure_date);
+    }
+
+    return results;
   } catch (error) {
     console.error('Hotel Search Error:', error);
     // Fallback to sample data on error as well for seamless dev experience
     return SAMPLE_HOTELS;
+  }
+}
+
+async function logHotelPrice(destId: string, city: string, price: number, checkin: string, checkout: string) {
+  try {
+    const { supabase } = await import('./supabase');
+    if (!supabase) return;
+    await supabase.from('hotel_price_history').insert({
+      dest_id: destId,
+      city_name: city,
+      price: Math.round(price),
+      checkin_date: checkin,
+      checkout_date: checkout,
+      sampled_at: new Date().toISOString()
+    });
+  } catch (e) {
+    console.warn('[HotelAPI] Failed to log price:', e);
   }
 }
 

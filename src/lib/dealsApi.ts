@@ -213,12 +213,25 @@ export async function fetchLiveDeals(
 export async function fetchAnomalyDeals() {
   if (!supabase) return [];
   try {
-    const { data, error } = await supabase.functions.invoke('mistake-fare-detector');
+    const { data, error } = await supabase
+      .from('detected_deals')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+      
     if (error) {
       console.error('Error fetching anomalies:', error);
       return [];
     }
-    return data?.anomalies || [];
+
+    return data.map(d => ({
+      route: `${d.origin_code} -> ${d.destination_code || d.destination_name}`,
+      price: d.price,
+      meanPrice: d.normal_price || d.price * 2, // fallback if normal price unknown
+      date: d.created_at.split('T')[0],
+      tag: d.is_mistake_fare ? '🚨 MISTAKE FARE' : '🔥 VALUE DEAL',
+      tagColor: d.is_mistake_fare ? '#FF6B6B' : '#F39C12'
+    }));
   } catch (err) {
     console.error('Failed to fetch anomaly deals:', err);
     return [];
