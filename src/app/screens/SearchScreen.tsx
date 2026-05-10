@@ -68,6 +68,11 @@ export function SearchScreen({ onSearch }: SearchScreenProps) {
   };
 
   const handleSearch = () => {
+    if (!from || !to) {
+      alert('Please select both Origin and Destination from the dropdown suggestions.');
+      return;
+    }
+    
     trackEvent('flight_search_initiated', {
       from: from.code,
       to: to.code,

@@ -113,7 +113,12 @@ export function AirportSearch({ value, onChange, placeholder = 'Search city or a
           type="text"
           value={displayValue}
           onChange={handleInputChange}
-          onFocus={() => { setFocused(true); setResults(searchAirports(query, 8)); setIsOpen(true); }}
+          onFocus={() => { 
+            setFocused(true); 
+            setQuery(''); // Clear query on focus to allow fresh search
+            setResults(searchAirports('', 8)); 
+            setIsOpen(true); 
+          }}
           placeholder={placeholder}
           autoComplete="off"
           className="w-full h-12 px-4 rounded-xl bg-white/40 backdrop-blur-sm border-[1.5px] border-white/60 text-[#001F3F] font-semibold text-sm

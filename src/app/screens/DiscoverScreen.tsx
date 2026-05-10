@@ -250,7 +250,9 @@ export function DiscoverScreen() {
                           from: AIRPORTS.find(a => a.code === deal.from) || AIRPORTS.find(a => a.code === 'DEL')!,
                           to: AIRPORTS.find(a => a.code === deal.to) || AIRPORTS.find(a => a.code === 'LHR')!,
                           departDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-                          passengers: 1,
+                          adults: 1,
+                          children: 0,
+                          infants: 0,
                           cabin: cabinPreference,
                           tripType: 'one-way'
                         } 

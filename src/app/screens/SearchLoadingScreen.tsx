@@ -171,6 +171,8 @@ export function SearchLoadingScreen() {
           fetchedFlightsRef.current = flights;
         }
         
+        setDataReady(true);
+        
         // Save to history if found or mocked
         const finalFlights = fetchedFlightsRef.current;
         if (finalFlights && finalFlights.length > 0) {
@@ -178,18 +180,18 @@ export function SearchLoadingScreen() {
             from_city: searchState.from.city,
             to_city: searchState.to.city,
             code: `${searchState.from.code}→${searchState.to.code}`,
-            date: new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            date: searchState?.departDate ? new Date(searchState.departDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Upcoming',
             flag: destination.flag || '✈️',
-            price: `₹${finalFlights[0].price.toLocaleString('en-IN')}`
+            price: finalFlights[0]?.price ? `₹${finalFlights[0].price.toLocaleString('en-IN')}` : 'Best Price'
           });
         }
       }).catch(err => {
         console.error('Failed to fetch flights:', err);
-        // On hard error, also fallback
         const fallback = [
           { id: 'f-1', airline: 'IndiGo', airlineLogo: 'https://www.google.com/s2/favicons?domain=goindigo.in&sz=64', departureTime: '06:00', arrivalTime: '08:15', duration: '2h 15m', stops: 'Non-stop', stopsCount: 0, price: 4200, fromCode: searchState.from.code, toCode: searchState.to.code, date: searchState.departDate, isBest: true, segments: [] },
         ];
         fetchedFlightsRef.current = fallback as any;
+        setDataReady(true);
       });
     }
   }, [searchState, destination.flag, addSearch]);
@@ -227,13 +229,25 @@ export function SearchLoadingScreen() {
     }
   }, [destination.city, destination.country, searchState?.from?.country, searchState?.departDate, searchState?.returnDate, searchState?.tripType]);
 
-  // Redirect to results after duration
+  const [dataReady, setDataReady] = useState(false);
+
+  // Redirect to results after duration OR early if results arrive
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/results', { state: { searchState, flights: fetchedFlightsRef.current }, replace: true });
-    }, DURATION);
+    let timer: any;
+    
+    if (dataReady) {
+      // Small delay to let user see some tips, but much faster than 18s
+      timer = setTimeout(() => {
+        navigate('/results', { state: { searchState, flights: fetchedFlightsRef.current }, replace: true });
+      }, 3500); 
+    } else {
+      timer = setTimeout(() => {
+        navigate('/results', { state: { searchState, flights: fetchedFlightsRef.current }, replace: true });
+      }, DURATION);
+    }
+    
     return () => clearTimeout(timer);
-  }, [navigate, searchState]);
+  }, [navigate, searchState, dataReady]);
 
   // Progress bar
   useEffect(() => {
