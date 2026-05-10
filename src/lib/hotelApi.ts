@@ -39,7 +39,7 @@ export async function searchHotels(params: {
     room_qty: params.room_qty,
     page_number: '1',
     languagecode: 'en-us',
-    currency_code: 'USD'
+    currency_code: 'INR'
   });
 
   if (params.children_age) {
@@ -55,7 +55,10 @@ export async function searchHotels(params: {
       }
     });
 
-    if (!response.ok) throw new Error('Failed to fetch hotels');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch hotels');
+    }
 
     const data = await response.json();
     
@@ -64,12 +67,14 @@ export async function searchHotels(params: {
       return [];
     }
 
+    if (!data.data || !data.data.hotels) return [];
+
     return data.data.hotels.map((h: any) => ({
       hotel_id: h.hotel_id,
       hotel_name: h.hotel_name,
       main_photo_url: h.main_photo_url,
       price: h.price_breakdown?.all_inclusive_amount || 0,
-      currency: h.price_breakdown?.currency || 'USD',
+      currency: h.price_breakdown?.currency || 'INR',
       rating: h.review_score,
       address: h.address,
       distance: h.distance_from_city_center,
@@ -82,6 +87,8 @@ export async function searchHotels(params: {
 }
 
 export async function resolveDestination(query: string) {
+  if (!query) return null;
+  
   try {
     const response = await fetch(`${BASE_URL}/hotels/searchDestination?query=${encodeURIComponent(query)}`, {
       method: 'GET',
@@ -94,7 +101,15 @@ export async function resolveDestination(query: string) {
     if (!response.ok) throw new Error('Failed to resolve destination');
 
     const data = await response.json();
-    return data.data?.[0]; // Returns { dest_id, dest_type, search_type, ... }
+    
+    if (data.status === false || !data.data || data.data.length === 0) {
+      console.warn(`No destination found for: ${query}`);
+      return null;
+    }
+
+    // Prefer CITY type if available
+    const cityResult = data.data.find((d: any) => d.search_type === 'CITY');
+    return cityResult || data.data[0];
   } catch (error) {
     console.error('Destination Resolution Error:', error);
     return null;

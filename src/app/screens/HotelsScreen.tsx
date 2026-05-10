@@ -4,6 +4,7 @@ import { Search, MapPin, Star, Loader2, Hotel, Building2, Navigation, Calendar, 
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { searchHotels, resolveDestination } from '../../lib/hotelApi';
+import { AIRPORTS, Airport } from '../../data/airports';
 
 export function HotelsScreen() {
   const location = useLocation();
@@ -19,23 +20,25 @@ export function HotelsScreen() {
   const [loading, setLoading] = useState(false);
   const [hotels, setHotels] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<Airport[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     if (prefilledCity) {
-      handleSearch();
+      // Clean prefilled city (extract city name from airport format if needed)
+      const cleaned = prefilledCity.includes('(') ? prefilledCity.split('(')[0].replace(/[^\w\s]/g, '').trim() : prefilledCity;
+      setQuery(cleaned);
+      handleSearchInternal(cleaned);
     }
   }, []);
 
-  const handleSearch = async () => {
-    if (!query) {
-      alert('Please enter a destination');
-      return;
-    }
+  const handleSearchInternal = async (searchQuery: string) => {
+    if (!searchQuery) return;
     setLoading(true);
     setSearching(true);
     
     try {
-      const destination = await resolveDestination(query);
+      const destination = await resolveDestination(searchQuery);
       if (destination) {
         const results = await searchHotels({
           dest_id: destination.dest_id,
@@ -48,7 +51,7 @@ export function HotelsScreen() {
         });
         setHotels(results);
       } else {
-        alert('Could not find that destination. Please try another city.');
+        alert(`Could not find "${searchQuery}". Please try another city or use the suggestions.`);
       }
     } catch (error) {
       console.error('Search failed:', error);
@@ -82,8 +85,46 @@ export function HotelsScreen() {
                 placeholder="Where to?"
                 className="w-full bg-[#001F3F]/5 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-[#001F3F] focus:ring-2 focus:ring-[#0047AB]/20 transition-all placeholder:text-[#001F3F]/30"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setQuery(val);
+                  if (val.length > 1) {
+                    const filtered = AIRPORTS.filter(a => 
+                      a.city.toLowerCase().includes(val.toLowerCase()) || 
+                      a.name.toLowerCase().includes(val.toLowerCase()) ||
+                      a.code.toLowerCase().includes(val.toLowerCase())
+                    ).slice(0, 5);
+                    setSuggestions(filtered);
+                    setShowSuggestions(true);
+                  } else {
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                  }
+                }}
+                onFocus={() => query.length > 1 && setShowSuggestions(true)}
               />
+              
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-[#001F3F]/5 z-50 overflow-hidden backdrop-blur-xl">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.code}
+                      className="w-full px-4 py-3 text-left hover:bg-[#0047AB]/5 flex items-center gap-3 transition-colors border-b border-[#001F3F]/5 last:border-none"
+                      onClick={() => {
+                        setQuery(s.city);
+                        setShowSuggestions(false);
+                        setSuggestions([]);
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#0047AB]/5 flex items-center justify-center text-lg">{s.flag}</div>
+                      <div>
+                        <div className="text-sm font-bold text-[#001F3F]">{s.city}</div>
+                        <div className="text-[10px] font-medium text-[#001F3F]/40 uppercase">{s.name} ({s.code})</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -161,7 +202,7 @@ export function HotelsScreen() {
           <PremiumButton 
             variant="primary" 
             className="w-full h-14 shadow-lg shadow-[#0047AB]/20" 
-            onClick={handleSearch}
+            onClick={() => handleSearchInternal(query)}
             disabled={loading}
           >
             {loading ? <Loader2 className="animate-spin" /> : <div className="flex items-center gap-2"><Search size={20} /> Search Properties</div>}
@@ -244,20 +285,61 @@ export function HotelsScreen() {
         </div>
       )}
 
-      {/* Categories */}
+      {/* Categories & Popular Destinations */}
       {!searching && (
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { name: 'Luxury Stay', icon: '💎', color: 'from-[#0047AB] to-[#00B8D4]' },
-            { name: 'Beachfront', icon: '🏖️', color: 'from-[#FF6B6B] to-[#f15959]' },
-            { name: 'City Center', icon: '🏙️', color: 'from-[#001F3F] to-[#0047AB]' },
-            { name: 'Hidden Gem', icon: '🌿', color: 'from-[#00A854] to-[#008f47]' },
-          ].map((cat) => (
-            <LiquidGlassCard key={cat.name} hoverable className="text-center py-6 border-[#0047AB]/5">
-              <span className="text-3xl mb-2 block">{cat.icon}</span>
-              <div className="text-xs font-black text-[#001F3F] uppercase tracking-widest">{cat.name}</div>
-            </LiquidGlassCard>
-          ))}
+        <div className="space-y-8">
+          {/* Popular Cities */}
+          <section>
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <Navigation size={18} className="text-[#0047AB]" />
+              <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Popular Destinations</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { city: 'Dubai', flag: '🇦🇪', id: '27540839' },
+                { city: 'London', flag: '🇬🇧', id: '95565050' },
+                { city: 'Paris', flag: '🇫🇷', id: '95565053' },
+                { city: 'Singapore', flag: '🇸🇬', id: '27546111' },
+                { city: 'New Delhi', flag: '🇮🇳', id: '95673498' },
+                { city: 'New York', flag: '🇺🇸', id: '95565058' }
+              ].map((c) => (
+                <button
+                  key={c.city}
+                  onClick={() => {
+                    setQuery(c.city);
+                    handleSearchInternal(c.city);
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-[#001F3F]/5 hover:border-[#0047AB]/20 hover:shadow-lg transition-all text-left"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#0047AB]/5 flex items-center justify-center text-xl shadow-inner">
+                    {c.flag}
+                  </div>
+                  <span className="text-sm font-bold text-[#001F3F]">{c.city}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Categories */}
+          <section>
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <Star size={18} className="text-[#0047AB]" />
+              <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Travel Styles</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { name: 'Luxury Stay', icon: '💎' },
+                { name: 'Beachfront', icon: '🏖️' },
+                { name: 'City Center', icon: '🏙️' },
+                { name: 'Hidden Gem', icon: '🌿' },
+              ].map((cat) => (
+                <LiquidGlassCard key={cat.name} hoverable className="text-center py-6 border-[#0047AB]/5">
+                  <span className="text-3xl mb-2 block">{cat.icon}</span>
+                  <div className="text-xs font-black text-[#001F3F] uppercase tracking-widest">{cat.name}</div>
+                </LiquidGlassCard>
+              ))}
+            </div>
+          </section>
         </div>
       )}
     </div>
