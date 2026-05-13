@@ -1,10 +1,13 @@
-import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2, Brain, Hotel, ShieldCheck } from 'lucide-react';
+import { Plane, Bell, TrendingDown, Sparkles, ArrowRight, Zap, MapPin, X, Loader2, Brain, Hotel, ShieldCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { useStore } from '../../store/useStore';
 import { fetchTrendingDestinations, TrendingDestination } from '../../lib/discoveryApi';
 import { fetchLiveDeals, Deal } from '../../lib/dealsApi';
+interface HomeScreenProps {
+  onNavigate: (screen: string) => void;
+}
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const user = useStore((state) => state.user);

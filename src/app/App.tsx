@@ -114,10 +114,10 @@ function AppContent() {
       <div className={isInApp ? 'pb-24' : ''}>
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#0047AB] font-black">Loading...</div>}>
           <Routes>
-            <Route path="/" element={<LandingPage onNavigate={(s) => navigate(`/${s}`)} />} />
+            <Route path="/" element={<LandingPage onNavigate={(s: string) => navigate(`/${s}`)} />} />
             <Route path="/login" element={<LoginScreen onLoginSuccess={() => navigate('/profile-setup')} />} />
             <Route path="/profile-setup" element={<ProfileSetupScreen onComplete={() => navigate('/home')} />} />
-            <Route path="/home" element={<HomeScreen onNavigate={(s) => navigate(`/${s}`)} />} />
+            <Route path="/home" element={<HomeScreen onNavigate={(s: string) => navigate(`/${s}`)} />} />
             <Route path="/search" element={<SearchScreen onSearch={(params) => navigate('/loading', { state: params })} />} />
             <Route path="/hotels" element={<HotelsScreen />} />
             <Route path="/loading" element={<SearchLoadingScreen />} />
