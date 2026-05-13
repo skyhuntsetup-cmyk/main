@@ -1,33 +1,48 @@
 import { Plane, Bell, TrendingDown, TrendingUp, Sparkles, ArrowRight, Zap, MapPin, X, Loader2, Brain, Hotel, ShieldCheck } from 'lucide-react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { useStore } from '../../store/useStore';
-
-interface HomeScreenProps {
-  onNavigate: (screen: string) => void;
-}
-
-const mockRecentSearches: any[] = [];
-const popularDestinations: any[] = [];
-const liveDeals: any[] = [];
+import { fetchTrendingDestinations, TrendingDestination } from '../../lib/discoveryApi';
+import { fetchLiveDeals, Deal } from '../../lib/dealsApi';
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const user = useStore((state) => state.user);
   const alerts = useStore((state) => state.alerts);
   const activeAlerts = alerts.filter(a => a.active).length;
   const storeRecentSearches = useStore((state) => state.recentSearches);
-  const recentSearches = storeRecentSearches.length > 0 ? storeRecentSearches : mockRecentSearches;
+  const recentSearches = storeRecentSearches;
   const notifications = useStore((state) => state.notifications);
   const isCheckingAlerts = useStore((state) => state.isCheckingAlerts);
   const markNotificationRead = useStore((state) => state.markNotificationRead);
   
+  const [popularDestinations, setPopularDestinations] = useState<TrendingDestination[]>([]);
+  const [liveDeals, setLiveDeals] = useState<Deal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const unreadNotifications = notifications.filter(n => !n.read);
 
   useEffect(() => {
-    // Optionally trigger check automatically if we have alerts but haven't checked recently
-    // get().checkPriceAlerts() is already called in fetchUserData, but we can have a manual refresh button too.
-  }, []);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const dests = await fetchTrendingDestinations();
+        setPopularDestinations(dests.slice(0, 4));
+
+        const homeAirport = user?.homeAirport?.match(/\((\w+)\)/)?.[1] || 'DEL';
+        const dealsData = await fetchLiveDeals(homeAirport);
+        if (dealsData && dealsData.flashSales) {
+          setLiveDeals(dealsData.flashSales.slice(0, 5));
+        }
+      } catch (err) {
+        console.error('HomeScreen data load failed:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.homeAirport]);
 
   return (
     <div className="min-h-screen pb-28">
@@ -192,27 +207,74 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           <button onClick={() => onNavigate('deals')} className="text-xs font-bold text-[#0047AB]">See all →</button>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-1 px-5 no-scrollbar">
-          {liveDeals.length > 0 ? liveDeals.map((deal, i) => (
+          {isLoading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} className="flex-shrink-0 w-[150px] h-[100px] rounded-2xl bg-white/30 animate-pulse" />
+            ))
+          ) : liveDeals.length > 0 ? liveDeals.map((deal, i) => (
             <LiquidGlassCard
               key={i}
               size="small"
-              className={`flex-shrink-0 w-[150px] cursor-pointer ${deal.urgent ? 'border-[#FF6B6B]/40' : ''}`}
+              className="flex-shrink-0 w-[160px] cursor-pointer"
               hoverable
               onClick={() => onNavigate('deals')}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-black text-[#001F3F]/60">{deal.route}</span>
-                {deal.urgent && <span className="w-2 h-2 rounded-full bg-[#FF6B6B] animate-pulse flex-shrink-0" />}
+                <span className="text-[11px] font-black text-[#001F3F]/60">{deal.from} → {deal.to}</span>
+                <span className="text-lg">{deal.flag}</span>
               </div>
-              <div className="text-lg font-black text-[#001F3F]">{deal.price}</div>
+              <div className="text-lg font-black text-[#001F3F]">₹{deal.price.toLocaleString('en-IN')}</div>
               <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#00A854]/10">
                 <TrendingDown size={10} className="text-[#00A854]" />
-                <span className="text-[10px] font-black text-[#00A854]">{deal.save} OFF</span>
+                <span className="text-[10px] font-black text-[#00A854]">{deal.discount}% OFF</span>
               </div>
             </LiquidGlassCard>
           )) : (
             <div className="w-full p-4 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
-              <span className="text-xs font-bold text-[#001F3F]/50">No live deals found. Waiting for API integration...</span>
+              <span className="text-xs font-bold text-[#001F3F]/50">Checking for fresh deals...</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Popular Destinations */}
+      <div className="px-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Popular Destinations</h2>
+          <button onClick={() => onNavigate('discover')} className="text-xs font-bold text-[#0047AB]">See all →</button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {isLoading ? (
+            [1, 2, 3, 4].map(i => (
+              <div key={i} className="aspect-square rounded-2xl bg-white/30 animate-pulse" />
+            ))
+          ) : popularDestinations.length > 0 ? popularDestinations.map((dest, i) => (
+            <LiquidGlassCard 
+              key={i} 
+              hoverable 
+              onClick={() => onNavigate('discover')} 
+              size="small"
+              className="overflow-hidden"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex flex-col">
+                  <div className="font-black text-[#001F3F] truncate">{dest.name}</div>
+                  <div className="text-[10px] text-[#001F3F]/40 font-bold uppercase tracking-tighter">{dest.country}</div>
+                </div>
+                <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg text-[10px] font-black bg-[#00A854]/10 text-[#00A854]`}>
+                  <TrendingDown size={10} />
+                  <span>{dest.airportCode}</span>
+                </div>
+              </div>
+              <div className="text-lg font-black text-[#0047AB] mt-1">₹{(dest.priceStart || 0).toLocaleString('en-IN')}</div>
+              <div className="text-[10px] text-[#001F3F]/40 font-medium">starting fare</div>
+              <div className="mt-2 p-1.5 rounded-lg bg-[#001F3F]/5 text-[9px] text-[#001F3F]/60 font-medium italic line-clamp-2">
+                {dest.aiInsight}
+              </div>
+            </LiquidGlassCard>
+          )) : (
+            <div className="col-span-2 w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
+              <span className="text-xs font-bold text-[#001F3F]/50">Updating trends...</span>
             </div>
           )}
         </div>
@@ -242,40 +304,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           )) : (
             <div className="w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
               <span className="text-xs font-bold text-[#001F3F]/50">No recent searches. Try making a search!</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Popular Destinations */}
-      <div className="px-5 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-black text-[#001F3F] uppercase tracking-widest">Popular Destinations</h2>
-          <button className="text-xs font-bold text-[#0047AB]">See all →</button>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {popularDestinations.length > 0 ? popularDestinations.map((dest, i) => (
-            <LiquidGlassCard key={i} hoverable onClick={() => onNavigate('search')} size="small">
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-3xl">{dest.flag}</span>
-                <div className={`flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] font-black ${
-                  dest.trend === 'down' ? 'bg-[#00A854]/10 text-[#00A854]' :
-                  dest.trend === 'up' ? 'bg-[#E74C3C]/10 text-[#E74C3C]' :
-                  'bg-[#001F3F]/5 text-[#001F3F]/40'
-                }`}>
-                  {dest.trend === 'down' && <TrendingDown size={10} />}
-                  {dest.trend === 'up' && <TrendingUp size={10} />}
-                  <span>{dest.trend === 'stable' ? 'Stable' : `${dest.change}%`}</span>
-                </div>
-              </div>
-              <div className="font-black text-[#001F3F]">{dest.city}</div>
-              <div className="text-xs text-[#001F3F]/40 font-medium">{dest.country}</div>
-              <div className="text-xl font-black text-[#0047AB] mt-1">{dest.avgPrice}</div>
-              <div className="text-[10px] text-[#001F3F]/40 font-medium">avg / person</div>
-            </LiquidGlassCard>
-          )) : (
-            <div className="col-span-2 w-full p-6 rounded-2xl bg-white/30 border border-dashed border-[#001F3F]/20 text-center">
-              <span className="text-xs font-bold text-[#001F3F]/50">Waiting for API integration...</span>
             </div>
           )}
         </div>
