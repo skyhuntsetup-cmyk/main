@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as SettingsIcon, Award, Search, MapPin, Sparkles, Link, Star, Cloud, ChevronLeft, Save } from 'lucide-react';
+import { ChevronRight, User, Bell, Lock, HelpCircle, LogOut, Settings as SettingsIcon, Award, Search, MapPin, Sparkles, Link, Star, Cloud, ChevronLeft } from 'lucide-react';
 import { LiquidGlassCard } from '../components/LiquidGlassCard';
 import { PremiumButton } from '../components/PremiumButton';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
@@ -14,18 +14,9 @@ export function SettingsScreen() {
   const logout = useStore((state) => state.logout);
   const alerts = useStore((state) => state.alerts);
   const recentSearches = useStore((state) => state.recentSearches);
-  const updateProfile = useStore((state) => state.updateProfile);
   
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  // Deal Preferences Form State
-  const [dealPrefs, setDealPrefs] = useState(user?.dealPreferences || {
-    maxBudget: 50000,
-    cabinClass: 'economy' as const,
-    maxLayovers: 1,
-  });
   
   const uniqueRoutes = new Set(recentSearches.map(s => s.code)).size;
   const currentTier = user?.accountTier || 'free';
@@ -72,12 +63,6 @@ export function SettingsScreen() {
     { value: uniqueRoutes, label: 'Routes', icon: MapPin, color: 'from-[#00A854] to-[#008f47]' },
     { value: currentTier === 'pro' ? '∞' : currentTier === 'premium' ? 20 : 5, label: 'Alert Limit', icon: Star, color: 'from-[#F39C12] to-[#e89c0c]' },
   ];
-  const handleSaveDealPrefs = async () => {
-    setIsSaving(true);
-    await updateProfile({ dealPreferences: dealPrefs });
-    setIsSaving(false);
-    setActivePanel(null);
-  };
 
 
   if (activePanel === 'profile') {
