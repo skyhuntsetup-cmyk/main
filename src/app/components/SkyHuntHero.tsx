@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Search, MapPin, Calendar, Users, Sparkles, Plane, TrendingDown } from 'lucide-react';
 
-interface SkyDealHeroProps {
+interface SkyHuntHeroProps {
   onSearch?: () => void;
 }
 
-export function SkyDealHero({ onSearch }: SkyDealHeroProps) {
+export function SkyHuntHero({ onSearch }: SkyHuntHeroProps) {
   const [from, setFrom] = useState('Delhi (DEL)');
   const [to, setTo] = useState('London (LHR)');
   const [date, setDate] = useState('2026-05-15');

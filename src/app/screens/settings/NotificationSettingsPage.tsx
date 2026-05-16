@@ -271,7 +271,7 @@ export function NotificationSettingsPage({ onBack }: NotificationSettingsPagePro
             {[
               { key: 'newsletters' as const, label: 'Newsletters', desc: 'Travel tips and industry news' },
               { key: 'promotions' as const, label: 'Promotional Offers', desc: 'Special promotions from partners' },
-              { key: 'surveys' as const, label: 'Surveys & Feedback', desc: 'Help us improve Sky Hunter' }
+              { key: 'surveys' as const, label: 'Surveys & Feedback', desc: 'Help us improve Sky Hunt' }
             ].map((marketing) => (
               <div
                 key={marketing.key}

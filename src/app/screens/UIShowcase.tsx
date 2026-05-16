@@ -35,7 +35,7 @@ export function UIShowcase() {
             </span>
           </div>
           <h1 className="text-5xl font-bold text-[#001F3F]">
-            SkyDeal Premium UI System
+            Sky Hunt Premium UI System
           </h1>
           <p className="text-lg text-[#001F3F]/70 font-medium max-w-2xl mx-auto">
             Demonstrating Liquid Glass, AI Pulse Indicators, Bento Grids, and Semantic Colors

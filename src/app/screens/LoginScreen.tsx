@@ -154,7 +154,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               </div>
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#0047AB] to-[#00F5FF] bg-clip-text text-transparent">
-              Welcome to SkyDeal
+              Welcome to Sky Hunt
             </h1>
             <p className="text-[#001F3F]/70 font-medium">
               Sign in instantly — no password required

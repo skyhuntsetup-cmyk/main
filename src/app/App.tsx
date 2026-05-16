@@ -42,7 +42,7 @@ function AppContent() {
   useEffect(() => { loginRef.current = login; }, [login]);
   useEffect(() => { logoutRef.current = logout; }, [logout]);
 
-  const isInApp = true;
+  const isInApp = !['/', '/login', '/auth/callback'].includes(location.pathname);
   const activeTab = (APP_TABS.includes(path as Tab) ? path : 'search') as Tab;
 
   // Set up auth listener exactly ONCE on mount.

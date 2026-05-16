@@ -8,8 +8,8 @@ interface AboutPageProps {
 export function AboutPage({ onBack }: AboutPageProps) {
   const faqs = [
     {
-      question: 'How does Sky Hunter find the best deals?',
-      answer: 'Sky Hunter uses advanced AI algorithms to scan millions of flight combinations across hundreds of airlines in real-time, ensuring you get the absolute best prices available.'
+      question: 'How does Sky Hunt find the best deals?',
+      answer: 'Sky Hunt uses advanced AI algorithms to scan millions of flight combinations across hundreds of airlines in real-time, ensuring you get the absolute best prices available.'
     },
     {
       question: 'Are the prices shown final?',
@@ -30,9 +30,9 @@ export function AboutPage({ onBack }: AboutPageProps) {
   ];
 
   const supportChannels = [
-    { icon: Mail, label: 'Email Support', value: 'support@skyhunter.com', color: '#1F77D2' },
+    { icon: Mail, label: 'Email Support', value: 'support@skyhunt.com', color: '#1F77D2' },
     { icon: MessageCircle, label: 'Live Chat', value: 'Available 24/7', color: '#00A854' },
-    { icon: FileText, label: 'Help Center', value: 'help.skyhunter.com', color: '#F39C12' }
+    { icon: FileText, label: 'Help Center', value: 'help.skyhunt.com', color: '#F39C12' }
   ];
 
   return (
@@ -62,19 +62,19 @@ export function AboutPage({ onBack }: AboutPageProps) {
       </div>
 
       <div className="px-4 space-y-6">
-        {/* About Sky Hunter */}
+        {/* About Sky Hunt */}
         <Card className="bg-gradient-to-br from-[#1F77D2]/10 to-transparent border-2 border-[#1F77D2]/20">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1F77D2] to-[#1557a0] flex items-center justify-center shadow-xl">
               <span className="text-3xl">✈️</span>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#222222]">Sky Hunter</h2>
+              <h2 className="text-2xl font-bold text-[#222222]">Sky Hunt</h2>
               <p className="text-sm text-[#666666] font-medium">Version 1.0.0 (Build 42)</p>
             </div>
           </div>
           <p className="text-[#666666] leading-relaxed">
-            Sky Hunter is your AI-powered flight deal hunting companion. We help millions of travelers
+            Sky Hunt is your AI-powered flight deal hunting companion. We help millions of travelers
             save money by finding the best flight deals through intelligent price monitoring,
             real-time alerts, and predictive analytics.
           </p>
@@ -176,8 +176,8 @@ export function AboutPage({ onBack }: AboutPageProps) {
         {/* Legal & Credits */}
         <Card className="bg-gradient-to-br from-[#F5F5F5] to-white border border-[#E8E8E8]">
           <div className="text-xs text-[#666666] text-center space-y-2">
-            <div className="font-bold text-sm text-[#222222]">Sky Hunter</div>
-            <div>© 2026 Sky Hunter Technologies Pvt. Ltd.</div>
+            <div className="font-bold text-sm text-[#222222]">Sky Hunt</div>
+            <div>© 2026 Sky Hunt Technologies Pvt. Ltd.</div>
             <div>All rights reserved.</div>
             <div className="pt-3 border-t border-[#E8E8E8] mt-3 space-y-1">
               <div>Built with ❤️ in India</div>

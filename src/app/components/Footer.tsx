@@ -14,7 +14,7 @@ export function Footer() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1F77D2] to-[#1557a0] flex items-center justify-center shadow-lg">
                 <Plane className="text-white" size={20} />
               </div>
-              <span className="text-2xl font-bold">Sky Hunter</span>
+              <span className="text-2xl font-bold">Sky Hunt</span>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
               Your AI-powered flight deal hunting companion. Save up to 60% on every booking with intelligent price monitoring.
@@ -72,14 +72,14 @@ export function Footer() {
                 <Mail size={18} className="text-[#1F77D2] mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-sm font-semibold">Email</div>
-                  <div className="text-white/70 text-sm">support@skyhunter.com</div>
+                  <div className="text-white/70 text-sm">support@skyhunt.com</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Phone size={18} className="text-[#1F77D2] mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-sm font-semibold">Phone</div>
-                  <div className="text-white/70 text-sm">+91 1800-HUNTER</div>
+                  <div className="text-white/70 text-sm">+91 1800-SKYHUNT</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -99,7 +99,7 @@ export function Footer() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-sm text-white/60 text-center md:text-left">
-              © {currentYear} Sky Hunter Technologies Pvt. Ltd. All rights reserved.
+              © {currentYear} Sky Hunt Technologies Pvt. Ltd. All rights reserved.
             </div>
             <div className="flex items-center gap-2 text-sm text-white/60">
               <span>Built with</span>

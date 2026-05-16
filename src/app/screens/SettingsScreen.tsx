@@ -5,6 +5,9 @@ import { PremiumButton } from '../components/PremiumButton';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { useStore } from '../../store/useStore';
 import { ProfilePanel } from './settings/ProfilePanel';
+import { NotificationSettingsPage } from './settings/NotificationSettingsPage';
+import { PreferencesPage } from './settings/PreferencesPage';
+import { AboutPage } from './settings/AboutPage';
 
 export function SettingsScreen() {
   const user = useStore((state) => state.user);
@@ -76,98 +79,6 @@ export function SettingsScreen() {
     setActivePanel(null);
   };
 
-  if (activePanel === 'deal-preferences') {
-    return (
-      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up">
-        <div className="px-5 pt-14 pb-4 flex items-center gap-3">
-          <button onClick={() => setActivePanel(null)} className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center text-[#001F3F]/50">
-            <ChevronLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-[#001F3F]">Deal Preferences</h1>
-            <p className="text-xs text-[#001F3F]/50 font-medium">Fine-tune your AI alerts</p>
-          </div>
-        </div>
-
-        <div className="px-5 space-y-5">
-          <LiquidGlassCard>
-            <div className="mb-4">
-              <div className="flex justify-between items-end mb-2">
-                <label className="text-sm font-black text-[#001F3F] uppercase tracking-wide">Max Default Budget</label>
-                <span className="text-lg font-black text-[#00A854]">₹{dealPrefs.maxBudget.toLocaleString('en-IN')}</span>
-              </div>
-              <input 
-                type="range" 
-                min="5000" 
-                max="200000" 
-                step="1000"
-                value={dealPrefs.maxBudget}
-                onChange={(e) => setDealPrefs({...dealPrefs, maxBudget: Number(e.target.value)})}
-                className="w-full accent-[#00A854]" 
-              />
-              <div className="text-xs text-[#001F3F]/50 font-medium mt-2">
-                AI will prioritize deals falling under this global budget threshold.
-              </div>
-            </div>
-          </LiquidGlassCard>
-
-          <LiquidGlassCard>
-            <div className="mb-2 text-sm font-black text-[#001F3F] uppercase tracking-wide">Cabin Class</div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'economy', label: 'Economy' },
-                { id: 'premium_economy', label: 'Premium Econ' },
-                { id: 'business', label: 'Business' },
-                { id: 'first', label: 'First Class' }
-              ].map(cls => (
-                <button 
-                  key={cls.id}
-                  onClick={() => setDealPrefs({...dealPrefs, cabinClass: cls.id as any})}
-                  className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${
-                    dealPrefs.cabinClass === cls.id 
-                    ? 'border-[#0047AB] bg-[#0047AB]/5 text-[#0047AB]' 
-                              : 'border-transparent bg-white/50 text-[#001F3F]/60'
-                  }`}
-                >
-                  {cls.label}
-                </button>
-              ))}
-            </div>
-          </LiquidGlassCard>
-
-          <LiquidGlassCard>
-            <div className="mb-2 text-sm font-black text-[#001F3F] uppercase tracking-wide">Max Layovers</div>
-            <div className="flex gap-2">
-              {[0, 1, 2, 3].map(num => (
-                <button 
-                  key={num}
-                  onClick={() => setDealPrefs({...dealPrefs, maxLayovers: num})}
-                  className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border-2 ${
-                    dealPrefs.maxLayovers === num 
-                    ? 'border-[#F39C12] bg-[#F39C12]/5 text-[#F39C12]' 
-                    : 'border-transparent bg-white/50 text-[#001F3F]/60'
-                  }`}
-                >
-                  {num === 0 ? 'Direct' : num === 3 ? '3+' : num}
-                </button>
-              ))}
-            </div>
-          </LiquidGlassCard>
-
-          <PremiumButton variant="primary" className="w-full h-14 text-lg mt-8" onClick={handleSaveDealPrefs} disabled={isSaving}>
-            {isSaving ? (
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <Save size={18} className="mr-2" />
-                Save Preferences
-              </>
-            )}
-          </PremiumButton>
-        </div>
-      </div>
-    );
-  }
 
   if (activePanel === 'profile') {
     return (
@@ -185,6 +96,30 @@ export function SettingsScreen() {
         <div className="px-5">
           <ProfilePanel onBack={() => setActivePanel(null)} />
         </div>
+      </div>
+    );
+  }
+
+  if (activePanel === 'notifications') {
+    return (
+      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up">
+        <NotificationSettingsPage onBack={() => setActivePanel(null)} />
+      </div>
+    );
+  }
+
+  if (activePanel === 'deal-preferences') {
+    return (
+      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up">
+        <PreferencesPage onBack={() => setActivePanel(null)} />
+      </div>
+    );
+  }
+
+  if (activePanel === 'help') {
+    return (
+      <div className="min-h-screen bg-[#F0F4F8] pb-28 animate-slide-up">
+        <AboutPage onBack={() => setActivePanel(null)} />
       </div>
     );
   }

@@ -106,7 +106,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       <div className="absolute top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Plane className="text-[#00F5FF]" size={24} />
-          <span className="font-black text-[#001F3F] text-xl">SkyDeal</span>
+          <span className="font-black text-[#001F3F] text-xl">Sky Hunt</span>
         </div>
         <div>
           {isAuthenticated && user ? (
@@ -230,7 +230,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
               </span>
               <br />
               <span className="text-[#001F3F]">
-                With SkyDeal
+                With Sky Hunt
               </span>
             </h1>
 
@@ -419,7 +419,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
         {/* Bento Grid Features */}
         <div className="mb-20">
           <h2 className="text-4xl font-bold text-[#001F3F] mb-12 text-center">
-            Why Choose SkyDeal
+            Why Choose Sky Hunt
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {features.map((feature, i) => (
@@ -439,8 +439,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
 
                 <div className="relative">
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient}
-                                flex items-center justify-center mb-6
-                                shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                 flex items-center justify-center mb-6
+                                 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                     <feature.icon className="text-white" size={32} />
                   </div>
                   <h3 className="text-2xl font-bold text-[#001F3F] mb-3">
@@ -482,7 +482,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                        active:scale-95
                        transition-all duration-200"
             >
-              Join SkyDeal Now
+              Join Sky Hunt Now
             </button>
           </div>
         </div>

@@ -17,7 +17,7 @@ export function TopNavigation({ onLogout }: TopNavigationProps) {
             <Plane className="text-white" size={20} />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-[#0047AB] to-[#00F5FF] bg-clip-text text-transparent">
-            SkyDeal
+            Sky Hunt
           </span>
         </div>
 
@@ -55,7 +55,7 @@ export function TopNavigation({ onLogout }: TopNavigationProps) {
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,71,171,0.15)] overflow-hidden animate-[fade-in_0.2s_ease-out]">
                 <div className="p-4 border-b border-white/30">
-                  <div className="font-bold text-[#001F3F]">Rishabh Aroea</div>
+                  <div className="font-bold text-[#001F3F]">Rishabh Arora</div>
                   <div className="text-sm text-[#001F3F]/60">rishabh@example.com</div>
                 </div>
                 <div className="p-2">
